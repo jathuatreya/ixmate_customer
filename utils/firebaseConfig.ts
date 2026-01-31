@@ -4,13 +4,13 @@ import { getFirestore } from "firebase/firestore";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyDzoYpbrb-N2Z01MGcyIimS2eig4j4fsvk",
-  authDomain: "fix-mate-a013e.firebaseapp.com",
-  projectId: "fix-mate-a013e",
-  storageBucket: "fix-mate-a013e.firebasestorage.app",
-  messagingSenderId: "212419866755",
-  appId: "1:212419866755:web:0571ba0398a74e984d2bb6",
-  measurementId: "G-DS2EV277DX",
+  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
 // Initialize Firebase
@@ -50,4 +50,3 @@ isSupported()
   });
 
 export { analytics, app, auth, db };
-
