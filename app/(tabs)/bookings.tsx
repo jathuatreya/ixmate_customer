@@ -3,18 +3,17 @@ import { useRouter } from "expo-router";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
-    Platform,
     ScrollView,
     StatusBar,
     StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
-    View,
+    View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useSession } from "../ctx";
-import { db } from "../utils/firebaseConfig";
+import { useSession } from "../../ctx";
+import { db } from "../../utils/firebaseConfig";
 
 const COLORS = {
   primary: "#2563EB", // Blue-600
@@ -55,7 +54,6 @@ export default function MyRequestsScreen() {
         id: doc.id,
         ...doc.data(),
       }));
-      // Sort locally by created date if needed, or rely on index if complex
       setRequests(fetchedRequests);
       setLoading(false);
     });
@@ -86,16 +84,6 @@ export default function MyRequestsScreen() {
     return req.status?.toLowerCase() === filter.toLowerCase();
   });
 
-  // Helper to format date if timestamp or string
-  const formatDate = (date: any) => {
-    if (!date) return "";
-    // If string, return as is
-    if (typeof date === "string") return date;
-    // If timestamp loop (basic)
-    if (date.seconds) return new Date(date.seconds * 1000).toDateString();
-    return "";
-  };
-
   return (
     <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
       <StatusBar
@@ -103,18 +91,10 @@ export default function MyRequestsScreen() {
         backgroundColor={COLORS.backgroundLight}
       />
 
-      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <MaterialIcons name="arrow-back" size={24} color={COLORS.textDark} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>My Requests</Text>
+        <Text style={[styles.headerTitle, { marginLeft: 0 }]}>My Requests</Text>
       </View>
 
-      {/* Search Bar */}
       <View style={styles.searchContainer}>
         <View style={styles.searchWrapper}>
           <MaterialIcons
@@ -134,7 +114,6 @@ export default function MyRequestsScreen() {
         </View>
       </View>
 
-      {/* Filter Tabs */}
       <View style={styles.tabsContainer}>
         <ScrollView
           horizontal
@@ -166,7 +145,6 @@ export default function MyRequestsScreen() {
         </ScrollView>
       </View>
 
-      {/* Request List */}
       <ScrollView
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
@@ -196,7 +174,6 @@ export default function MyRequestsScreen() {
                 },
               ]}
             >
-              {/* Card Header */}
               <View style={styles.cardHeader}>
                 <View style={styles.cardHeaderLeft}>
                   <View
@@ -245,7 +222,6 @@ export default function MyRequestsScreen() {
                 </View>
               </View>
 
-              {/* Details Box */}
               <View style={styles.detailsBox}>
                 <View style={styles.detailRow}>
                   <MaterialIcons
@@ -279,9 +255,7 @@ export default function MyRequestsScreen() {
                 )}
               </View>
 
-              {/* Actions */}
               <View style={styles.actionRow}>
-                {/* Actions Logic - simplified for safety */}
                 {item.status === "Pending" && (
                   <TouchableOpacity
                     style={styles.btnOutlineFull}
@@ -293,7 +267,7 @@ export default function MyRequestsScreen() {
                 {item.status === "Active" && (
                   <TouchableOpacity
                     style={styles.btnPrimary}
-                    onPress={() => router.push("/chat")}
+                    onPress={() => router.push("/(tabs)/inbox")}
                   >
                     <MaterialIcons
                       name="chat"
@@ -308,50 +282,6 @@ export default function MyRequestsScreen() {
             </View>
           ))}
       </ScrollView>
-
-      {/* Bottom Nav */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => router.push("/client-home")}
-        >
-          <MaterialIcons name="home" size={26} color={COLORS.textGray} />
-          <Text style={styles.navLabel}>Home</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => router.push("/my-requests")}
-        >
-          <View>
-            <MaterialIcons name="history" size={26} color={COLORS.primary} />
-            <View style={styles.navDot} />
-          </View>
-          <Text
-            style={[
-              styles.navLabel,
-              { color: COLORS.primary, fontWeight: "bold" },
-            ]}
-          >
-            History
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <MaterialIcons
-            name="chat-bubble-outline"
-            size={26}
-            color={COLORS.textGray}
-          />
-          <Text style={styles.navLabel}>Chats</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <MaterialIcons
-            name="person-outline"
-            size={26}
-            color={COLORS.textGray}
-          />
-          <Text style={styles.navLabel}>Profile</Text>
-        </TouchableOpacity>
-      </View>
     </SafeAreaView>
   );
 }
@@ -367,11 +297,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 12,
     backgroundColor: COLORS.backgroundLight,
-  },
-  backButton: {
-    padding: 4,
-    borderRadius: 20,
-    marginRight: 8,
   },
   headerTitle: {
     fontSize: 20,
@@ -502,36 +427,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textTransform: "uppercase",
   },
-  progressSection: {
-    marginTop: 4,
-    marginBottom: 16,
-  },
-  progressRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 6,
-  },
-  progressLabel: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: COLORS.statusActive,
-  },
-  progressValue: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: COLORS.textGray,
-  },
-  progressBarBg: {
-    height: 6,
-    backgroundColor: "#f1f5f9",
-    borderRadius: 3,
-    overflow: "hidden",
-  },
-  progressBarFill: {
-    height: "100%",
-    backgroundColor: COLORS.statusActive,
-    borderRadius: 3,
-  },
   detailsBox: {
     backgroundColor: "#f8fafc",
     borderRadius: 8,
@@ -554,22 +449,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 12,
   },
-  btnOutline: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: COLORS.stroke,
-    backgroundColor: "white",
-    alignItems: "center",
-    justifyContent: "center",
-    flexDirection: "row",
-  },
-  btnOutlineText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: COLORS.textDark,
-  },
   btnOutlineFull: {
     width: "100%",
     paddingVertical: 10,
@@ -579,6 +458,11 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     alignItems: "center",
     justifyContent: "center",
+  },
+  btnOutlineText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: COLORS.textDark,
   },
   btnPrimary: {
     flex: 1,
@@ -598,45 +482,5 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     color: "white",
-  },
-  bottomNav: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: "white",
-    borderTopWidth: 1,
-    borderTopColor: COLORS.stroke,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    paddingBottom: Platform.OS === "ios" ? 24 : 12,
-    zIndex: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.02,
-    shadowRadius: 4,
-    elevation: 10,
-  },
-  navItem: {
-    alignItems: "center",
-    gap: 4,
-  },
-  navLabel: {
-    fontSize: 10,
-    fontWeight: "500",
-    color: COLORS.textGray,
-  },
-  navDot: {
-    position: "absolute",
-    top: -2,
-    right: -2,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#ef4444",
-    borderWidth: 1.5,
-    borderColor: "white",
   },
 });

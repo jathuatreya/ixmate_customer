@@ -1,35 +1,32 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import {
-  ArrowLeft,
-  Bell,
-  Calendar,
-  CheckCheck,
-  Home,
-  Loader2,
-  MessageSquare,
-  MessageSquarePlus,
-  MoreVertical,
-  Phone,
-  Plus,
-  Search,
-  Send,
-  Smile,
-  User
+    ArrowLeft,
+    Bell,
+    CheckCheck,
+    Loader2,
+    MessageSquare,
+    MessageSquarePlus,
+    MoreVertical,
+    Phone,
+    Plus,
+    Search,
+    Send,
+    Smile,
 } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
-  Dimensions,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Dimensions,
+    Image,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -52,15 +49,15 @@ const COLORS = {
 const SCREEN_WIDTH = Dimensions.get("window").width;
 
 import {
-  Conversation,
-  listenToConversations,
-  listenToMessages,
-  Message,
-  sendMessage,
-} from "../services/chatService";
-import { auth } from "../utils/firebaseConfig";
+    Conversation,
+    listenToConversations,
+    listenToMessages,
+    Message,
+    sendMessage,
+} from "../../services/chatService";
+import { auth } from "../../utils/firebaseConfig";
 
-export default function ChatScreen() {
+export default function InboxScreen() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("All");
   const [currentConversation, setCurrentConversation] =
@@ -274,46 +271,10 @@ export default function ChatScreen() {
         {/* New Chat FAB - For now just goes to Home or specific flow */}
         <TouchableOpacity
           style={styles.fab}
-          onPress={() => router.push("/client-home")}
+          onPress={() => router.push("/(tabs)")}
         >
           <MessageSquarePlus size={24} color="white" />
         </TouchableOpacity>
-
-        {/* Main Bottom Nav */}
-        <View style={styles.bottomBar}>
-          <TouchableOpacity
-            onPress={() => router.push("/client-home")}
-            style={styles.navItem}
-          >
-            <Home size={24} color={COLORS.textSub} />
-            <Text style={styles.navLabel}>Home</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem}>
-            <MessageSquare size={24} color={COLORS.primary} />
-            <Text
-              style={[
-                styles.navLabel,
-                { color: COLORS.primary, fontWeight: "600" },
-              ]}
-            >
-              Chat
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => router.push("/my-requests")}
-            style={styles.navItem}
-          >
-            <Calendar size={24} color={COLORS.textSub} />
-            <Text style={styles.navLabel}>Bookings</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => router.push("/profile")}
-            style={styles.navItem}
-          >
-            <User size={24} color={COLORS.textSub} />
-            <Text style={styles.navLabel}>Profile</Text>
-          </TouchableOpacity>
-        </View>
       </View>
     );
   };
@@ -729,7 +690,7 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: "absolute",
-    bottom: 90, // Above bottom nav
+    bottom: 24, // Adjusted for Tab Bar
     right: 20,
     width: 56,
     height: 56,
@@ -742,29 +703,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,
-  },
-  bottomBar: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    paddingBottom: Platform.OS === "ios" ? 24 : 12,
-    backgroundColor: "rgba(255,255,255,0.95)",
-    borderTopWidth: 1,
-    borderTopColor: COLORS.borderLight,
-  },
-  navItem: {
-    alignItems: "center",
-    gap: 4,
-  },
-  navLabel: {
-    fontSize: 10,
-    fontWeight: "500",
-    color: COLORS.textSub,
   },
   // --- Detail Styles ---
   detailHeader: {
@@ -800,8 +738,8 @@ const styles = StyleSheet.create({
     borderColor: COLORS.white,
   },
   headerName: {
-    fontSize: 14,
-    fontWeight: "bold",
+    fontSize: 16,
+    fontWeight: "600",
     color: COLORS.textMain,
   },
   headerStatus: {
@@ -811,81 +749,48 @@ const styles = StyleSheet.create({
   },
   headerActions: {
     flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   headerIconBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#f8fafc", // fallback
   },
   messagesContainer: {
     paddingHorizontal: 16,
+    paddingVertical: 20,
+    gap: 16,
     paddingBottom: 20,
-    paddingTop: 16,
-  },
-  systemMsgContainer: {
-    alignItems: "center",
-    marginVertical: 12,
-  },
-  systemMsg: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: "#fefce8",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#fef9c3",
-  },
-  systemMsgText: {
-    fontSize: 11,
-    color: "#a16207",
-  },
-  dateSeparator: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginVertical: 12,
-  },
-  line: {
-    flex: 1,
-    height: 1,
-    backgroundColor: "#cbd5e1",
-    opacity: 0.5,
-  },
-  dateText: {
-    fontSize: 10,
-    fontWeight: "bold",
-    color: "#9ca3af",
-    textTransform: "uppercase",
   },
   msgRowReceive: {
     flexDirection: "row",
-    marginBottom: 16,
     alignItems: "flex-end",
     gap: 8,
+    maxWidth: "80%",
   },
   msgRowSend: {
-    flexDirection: "row-reverse",
-    marginBottom: 16,
+    flexDirection: "row",
+    justifyContent: "flex-end",
     alignItems: "flex-end",
     gap: 8,
+    alignSelf: "flex-end",
+    maxWidth: "80%",
   },
   msgAvatar: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    marginBottom: 16,
   },
   bubbleReceive: {
-    backgroundColor: "white",
-    padding: 12,
-    borderRadius: 16,
-    borderBottomLeftRadius: 2,
-    maxWidth: "75%",
+    backgroundColor: COLORS.white,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 20,
+    borderBottomLeftRadius: 4,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -893,144 +798,88 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   bubbleSendContainer: {
-    maxWidth: "75%",
+    borderRadius: 20,
+    borderBottomRightRadius: 4,
+    overflow: "hidden",
   },
   bubbleSend: {
-    padding: 12,
-    borderRadius: 16,
-    borderBottomRightRadius: 2,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
   msgTextReceive: {
-    color: COLORS.textMain,
     fontSize: 15,
+    color: COLORS.textMain,
+    lineHeight: 22,
   },
   msgTextSend: {
-    color: "white",
     fontSize: 15,
+    color: "white",
+    lineHeight: 22,
   },
   sentImageContainer: {
+    marginBottom: 8,
     borderRadius: 12,
     overflow: "hidden",
-    marginBottom: 2,
   },
   sentImage: {
-    width: "100%",
+    width: 200,
     height: 150,
     resizeMode: "cover",
   },
-  audioContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    padding: 8,
-    paddingRight: 16,
-  },
-  playBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  audioWave: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 2,
-    height: 24,
-  },
-  bar: {
-    width: 3,
-    backgroundColor: "rgba(255,255,255,0.8)",
-    borderRadius: 1.5,
-  },
-  audioDuration: {
-    fontSize: 12,
-    color: "white",
-    marginLeft: 4,
-    fontWeight: "500",
-  },
   msgTime: {
     fontSize: 10,
-    color: "#9ca3af",
+    color: "#94a3b8",
     marginTop: 4,
     marginLeft: 4,
   },
   statusRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
     justifyContent: "flex-end",
-    marginRight: 4,
-  },
-  typingDots: {
-    flexDirection: "row",
     gap: 4,
-    padding: 4,
-  },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "#9ca3af",
   },
   inputArea: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     backgroundColor: COLORS.white,
     borderTopWidth: 1,
     borderTopColor: COLORS.borderLight,
-    paddingBottom: Platform.OS === "ios" ? 24 : 12,
-  },
-  quickActions: {
-    flexDirection: "row",
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  quickChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: "#f8fafc",
-    borderWidth: 1,
-    borderColor: "#f1f5f9",
-  },
-  quickChipText: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: COLORS.textSub,
   },
   inputRow: {
     flexDirection: "row",
-    alignItems: "flex-end",
-    paddingHorizontal: 16,
-    gap: 8,
+    alignItems: "center",
+    gap: 12,
   },
   attachBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#eff6ff",
+    backgroundColor: "#f1f5f9",
     alignItems: "center",
     justifyContent: "center",
   },
   textInputWrapper: {
     flex: 1,
-    backgroundColor: "#f1f5f9",
-    borderRadius: 20,
+    height: 48,
+    backgroundColor: "#f8fafc",
+    borderRadius: 24,
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
-    minHeight: 44,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
   },
   textInput: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 15,
     color: COLORS.textMain,
-    paddingVertical: 10,
+    height: "100%",
   },
   micBtn: {
-    width: 40,
-    height: 40,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "#f0fdfa",
     alignItems: "center",
     justifyContent: "center",
   },

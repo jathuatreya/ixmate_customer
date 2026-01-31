@@ -1,8 +1,17 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
-import { useRouter, useSegments } from 'expo-router';
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { API_URL } from './constants/Api';
+import { useRouter, useSegments } from "expo-router";
+import {
+  createUserWithEmailAndPassword,
+  signOut as firebaseSignOut,
+  User as FirebaseUser,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  updateProfile,
+  type Auth,
+} from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { db, auth as firebaseAuth } from "./utils/firebaseConfig"; // Rename import to avoid conflict
+const auth = firebaseAuth as Auth; // Assert type if needed or just use it
 
 type User = {
   _id: string;
@@ -10,12 +19,17 @@ type User = {
   email: string;
   role: string;
   phoneNumber?: string;
-  token?: string;
+  token?: string; // Not needed for Firebase but keeping for type compatibility if used elsewhere
 };
 
 type AuthContextType = {
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, name: string, phoneNumber: string) => Promise<void>;
+  signUp: (
+    email: string,
+    password: string,
+    name: string,
+    phoneNumber: string,
+  ) => Promise<void>;
   signOut: () => Promise<void>;
   user: User | null;
   isLoading: boolean;
@@ -45,12 +59,12 @@ function useProtectedRoute(user: User | null, isLoading: boolean) {
   useEffect(() => {
     if (!isNavigationReady || isLoading) return;
 
-    const inAuthGroup = segments[0] === 'login' || segments[0] === 'signup';
-    
+    const inAuthGroup = segments[0] === "login" || segments[0] === "signup";
+
     if (!user && !inAuthGroup) {
-      router.replace('/login');
+      router.replace("/login");
     } else if (user && inAuthGroup) {
-      router.replace('/client-home'); // Redirect to client home after login
+      router.replace("/(tabs)");
     }
   }, [user, segments, isNavigationReady, isLoading]);
 }
@@ -59,71 +73,84 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const storedUser = await AsyncStorage.getItem('user');
-        if (storedUser) {
-          setUser(JSON.parse(storedUser));
-        }
-      } catch (e) {
-        console.error('Failed to load user', e);
-      } finally {
-        setIsLoading(false);
-      }
+  // Helper to map Firebase User to our App User
+  const mapUser = (firebaseUser: FirebaseUser): User => {
+    return {
+      _id: firebaseUser.uid,
+      name: firebaseUser.displayName || "User",
+      email: firebaseUser.email || "",
+      role: "client", // Default role
+      phoneNumber: firebaseUser.phoneNumber || undefined,
     };
+  };
 
-    loadUser();
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        setUser(mapUser(firebaseUser));
+      } else {
+        setUser(null);
+      }
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   useProtectedRoute(user, isLoading);
 
   const signIn = async (email: string, password: string) => {
     try {
-      const response = await axios.post(`${API_URL}/auth/login`, {
-        email,
-        password,
-      });
-
-      const userData = response.data;
-      setUser(userData);
-      await AsyncStorage.setItem('user', JSON.stringify(userData));
-      
-      // Axios default header for future requests if needed
-      // axios.defaults.headers.common['Authorization'] = `Bearer ${userData.token}`;
-
+      await signInWithEmailAndPassword(auth, email, password);
     } catch (error: any) {
-       console.error("Sign in error", error.response?.data?.message || error.message);
-       throw new Error(error.response?.data?.message || 'Login failed');
+      console.error("Sign in error", error.message);
+      throw new Error(error.message || "Login failed");
     }
   };
-  
-  const signUp = async (email: string, password: string, name: string, phoneNumber: string) => {
-      try {
-          const response = await axios.post(`${API_URL}/auth/register`, {
-              name,
-              email,
-              password,
-              phoneNumber
-          });
 
-          const userData = response.data;
-          setUser(userData);
-          await AsyncStorage.setItem('user', JSON.stringify(userData));
+  const signUp = async (
+    email: string,
+    password: string,
+    name: string,
+    phoneNumber: string,
+  ) => {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password,
+      );
+      // Update profile with name
+      if (userCredential.user) {
+        await updateProfile(userCredential.user, {
+          displayName: name,
+        });
 
-      } catch (error: any) {
-          console.error("Sign up error", error.response?.data?.message || error.message);
-          throw new Error(error.response?.data?.message || 'Signup failed');
+        // Create user document in Firestore
+        await setDoc(doc(db, "users", userCredential.user.uid), {
+          uid: userCredential.user.uid,
+          email: email,
+          displayName: name,
+          phoneNumber: phoneNumber,
+          role: "customer", // Enforce role
+          createdAt: new Date(),
+        });
+
+        // Force update local state
+        setUser(mapUser({ ...userCredential.user, displayName: name } as any));
       }
-  }
+    } catch (error: any) {
+      console.error("Sign up error", error.message);
+      throw new Error(error.message || "Signup failed");
+    }
+  };
 
   const signOut = async () => {
-      try {
-          setUser(null);
-          await AsyncStorage.removeItem('user');
-      } catch (error) {
-          console.error("Sign out error", error);
-      }
+    try {
+      await firebaseSignOut(auth);
+    } catch (error) {
+      console.error("Sign out error", error);
+    }
   };
 
   return (
@@ -134,7 +161,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         signUp,
         user,
         isLoading,
-      }}>
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

@@ -4,19 +4,18 @@ import { useRouter } from "expo-router";
 import { doc, onSnapshot } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
-  Image,
-  Platform,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Switch,
-  Text,
-  TouchableOpacity,
-  View,
+    Image,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Switch,
+    Text,
+    TouchableOpacity,
+    View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useSession } from "../ctx";
-import { db } from "../utils/firebaseConfig";
+import { useSession } from "../../ctx";
+import { db } from "../../utils/firebaseConfig";
 
 // Theme
 const COLORS = {
@@ -64,16 +63,12 @@ export default function ProfileScreen() {
       >
         {/* Top Buttons */}
         <SafeAreaView edges={["top"]} style={styles.topBar}>
-          <TouchableOpacity
-            style={styles.iconBtn}
-            onPress={() => router.back()}
-          >
-            <MaterialIcons name="arrow-back" size={22} color="white" />
-          </TouchableOpacity>
-          <Text style={styles.pageTitle}>Profile</Text>
-          <TouchableOpacity style={styles.iconBtn}>
-            <MaterialIcons name="settings" size={22} color="white" />
-          </TouchableOpacity>
+          <View style={styles.topBarContent}>
+            <Text style={styles.pageTitle}>Profile</Text>
+            <TouchableOpacity style={styles.iconBtn}>
+              <MaterialIcons name="settings" size={22} color="white" />
+            </TouchableOpacity>
+          </View>
         </SafeAreaView>
 
         {/* Avatar & Info */}
@@ -296,53 +291,6 @@ export default function ProfileScreen() {
           </View>
         </View>
       </ScrollView>
-
-      {/* Bottom Nav */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => router.push("/client-home")}
-        >
-          <MaterialIcons name="home" size={26} color={COLORS.textSub} />
-          <Text style={styles.navLabel}>Home</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => router.push("/my-requests")}
-        >
-          <MaterialIcons
-            name="calendar-today"
-            size={26}
-            color={COLORS.textSub}
-          />
-          <Text style={styles.navLabel}>Bookings</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => router.push("/chat")}
-        >
-          <MaterialIcons
-            name="chat-bubble-outline"
-            size={26}
-            color={COLORS.textSub}
-          />
-          <Text style={styles.navLabel}>Inbox</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <View>
-            <MaterialIcons name="person" size={26} color={COLORS.primary} />
-            <View style={styles.navDot} />
-          </View>
-          <Text
-            style={[
-              styles.navLabel,
-              { color: COLORS.primary, fontWeight: "bold" },
-            ]}
-          >
-            Profile
-          </Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 }
@@ -366,11 +314,13 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 40,
   },
   topBar: {
+    marginBottom: 20,
+  },
+  topBarContent: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingVertical: 10,
-    marginBottom: 20,
   },
   iconBtn: {
     width: 40,
@@ -384,7 +334,7 @@ const styles = StyleSheet.create({
   },
   pageTitle: {
     color: "white",
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: "bold",
     letterSpacing: 0.5,
   },
@@ -570,44 +520,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: COLORS.textSub,
     opacity: 0.5,
-  },
-  bottomNav: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    paddingBottom: Platform.OS === "ios" ? 24 : 12,
-    backgroundColor: "white",
-    borderTopWidth: 1,
-    borderTopColor: COLORS.borderLight,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.02,
-    shadowRadius: 4,
-    elevation: 10,
-  },
-  navItem: {
-    alignItems: "center",
-    gap: 4,
-  },
-  navDot: {
-    position: "absolute",
-    top: -2,
-    right: -2,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: COLORS.primary,
-    borderWidth: 1.5,
-    borderColor: "white",
-  },
-  navLabel: {
-    fontSize: 10,
-    fontWeight: "500",
-    color: COLORS.textSub,
   },
 });

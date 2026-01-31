@@ -1,487 +1,577 @@
-
-import React, { useState } from 'react';
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import {
-    View,
-    Text,
-    ScrollView,
-    TouchableOpacity,
-    StyleSheet,
-    StatusBar,
-    Dimensions,
-    Platform,
-} from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { MaterialIcons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+  ArrowLeft,
+  Calendar,
+  Check,
+  CheckCircle,
+  ChevronDown,
+  Clock,
+  CreditCard,
+  FileText,
+  Loader2,
+  MapPin,
+  ShieldCheck,
+} from "lucide-react-native";
+import React, { useState } from "react";
+import {
+  Alert,
+  Platform,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRequest } from "../contexts/RequestContext";
+import { useSession } from "../ctx";
+import { db } from "../utils/firebaseConfig";
 
 const COLORS = {
-    primary: '#118A7E',
-    primaryDark: '#0e7066',
-    backgroundLight: '#F5F7FA',
-    backgroundDark: '#121212',
-    surfaceLight: '#FFFFFF',
-    surfaceDark: '#1E1E1E',
-    textLight: '#1F2937',
-    textGray: '#6B7280',
-    textGrayLight: '#9CA3AF',
-    borderLight: '#E5E7EB',
-    secondary: '#0E7490',
-    sky50: '#f0f9ff',
-    sky100: '#e0f2fe',
-    sky900: '#0c4a6e',
-    emerald600: '#059669',
-    emerald700: '#047857',
+  primary: "#118A7E",
+  primaryDark: "#0e7066",
+  backgroundLight: "#F8FAFC",
+  surfaceLight: "#FFFFFF",
+  textLight: "#1e293b",
+  textGray: "#64748b",
+  borderLight: "#e2e8f0",
+  secondary: "#0E7490",
 };
 
 export default function ReviewRequestScreen() {
-    const router = useRouter();
-    const [agreed, setAgreed] = useState(false);
+  const router = useRouter();
+  const { requestData, setRequestData } = useRequest();
+  const { user } = useSession();
 
-    return (
-        <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-            <StatusBar barStyle="dark-content" backgroundColor={COLORS.backgroundLight} />
+  const [isAgreed, setIsAgreed] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                    <MaterialIcons name="arrow-back" size={24} color={COLORS.textLight} />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Review Request</Text>
+  const handleSubmit = async () => {
+    if (!isAgreed) {
+      Alert.alert(
+        "Agreement Required",
+        "Please agree to the terms and conditions to proceed.",
+      );
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      // Save to Firestore
+      await addDoc(collection(db, "requests"), {
+        ...requestData,
+        userId: user?._id || "guest",
+        status: "pending",
+        createdAt: serverTimestamp(),
+      });
+
+      // Reset and Navigate (ideally to a success screen or home)
+      Alert.alert("Success", "Your request has been submitted successfully!", [
+        {
+          text: "OK",
+          onPress: () => {
+            setRequestData({}); // Clear
+            router.push("/client-home");
+          },
+        },
+      ]);
+    } catch (error: any) {
+      Alert.alert("Submission Failed", error.message || "Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor={COLORS.backgroundLight}
+      />
+
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backButton}
+        >
+          <ArrowLeft size={24} color={COLORS.textLight} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Review Request</Text>
+        <View style={{ width: 40 }} />
+      </View>
+
+      <View style={{ flex: 1 }}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Step 4 Card */}
+          <View style={styles.stepCardContainer}>
+            <LinearGradient
+              colors={[COLORS.primary, COLORS.primaryDark]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.stepCardGradient}
+            >
+              <View style={styles.abstractShape1} />
+              <View style={styles.abstractShape2} />
+
+              <View style={styles.stepCardContent}>
+                <View style={styles.stepInfoRow}>
+                  <View>
+                    <Text style={styles.stepLabel}>STEP 4 OF 4</Text>
+                    <Text style={styles.stepTitle}>Review Details</Text>
+                  </View>
+                  <CheckCircle size={32} color="rgba(255,255,255,0.8)" />
+                </View>
+
+                <View style={styles.progressBarBg}>
+                  <View style={styles.progressBarFill} />
+                </View>
+              </View>
+            </LinearGradient>
+          </View>
+
+          {/* Summary Card (Receipt Style) */}
+          <View style={styles.receiptCard}>
+            <View style={styles.receiptHeader}>
+              <View style={styles.serviceIconBg}>
+                {/* Dynamic Icon based on service would be cool, default for now */}
+                <FileText size={20} color={COLORS.primary} />
+              </View>
+              <View>
+                <Text style={styles.serviceTitle}>
+                  {requestData.serviceType || "Service"}
+                </Text>
+                <Text style={styles.serviceSub}>One-time service request</Text>
+              </View>
+            </View>
+            <View style={styles.divider} />
+
+            {/* Details Rows */}
+            <View style={styles.detailsRow}>
+              <View style={styles.detailItem}>
+                <View style={styles.detailLabelRow}>
+                  <MapPin size={14} color="#94a3b8" />
+                  <Text style={styles.detailLabel}>Location</Text>
+                </View>
+                <Text style={styles.detailValue} numberOfLines={2}>
+                  {requestData.address}
+                </Text>
+              </View>
             </View>
 
-            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-                {/* Progress Step */}
-                <View style={styles.progressContainer}>
-                    <View style={styles.progressLabels}>
-                        <Text style={styles.stepText}>Step 4/4</Text>
-                        <Text style={styles.stepLabel}>FINAL REVIEW</Text>
-                    </View>
-                    <View style={styles.progressBarBg}>
-                        <View style={styles.progressBarFill} />
-                    </View>
+            <View style={styles.detailsRow}>
+              <View style={styles.detailItem}>
+                <View style={styles.detailLabelRow}>
+                  <Calendar size={14} color="#94a3b8" />
+                  <Text style={styles.detailLabel}>Date</Text>
                 </View>
-
-                {/* Summary Card */}
-                <View style={styles.card}>
-                    <View style={styles.cardHeader}>
-                        <View style={styles.cardHeaderTitleRow}>
-                            <MaterialIcons name="assignment-turned-in" size={20} color={COLORS.primary} />
-                            <Text style={styles.cardHeaderTitle}>Summary</Text>
-                        </View>
-                        <Text style={styles.serviceId}>Service ID: #REQ-2023</Text>
-                    </View>
-
-                    <View style={styles.cardContent}>
-                        {/* Service Category */}
-                        <View style={styles.detailRow}>
-                            <View style={{ flex: 1 }}>
-                                <Text style={styles.detailLabel}>SERVICE CATEGORY</Text>
-                                <View style={styles.detailValueRow}>
-                                    <MaterialIcons name="plumbing" size={18} color="#9CA3AF" />
-                                    <Text style={styles.detailValue}>Plumbing</Text>
-                                </View>
-                            </View>
-                            <TouchableOpacity style={styles.editButton}>
-                                <MaterialIcons name="edit" size={20} color={COLORS.primary} />
-                            </TouchableOpacity>
-                        </View>
-
-                        <View style={styles.divider} />
-
-                        {/* Work Description */}
-                        <View style={styles.detailRow}>
-                            <View style={{ flex: 1, paddingRight: 16 }}>
-                                <Text style={styles.detailLabel}>WORK DESCRIPTION</Text>
-                                <Text style={styles.descriptionText}>
-                                    Leaky kitchen sink pipe. Need urgent repair as water is damaging the cabinet.
-                                </Text>
-                            </View>
-                            <TouchableOpacity style={styles.editButton}>
-                                <MaterialIcons name="edit" size={20} color={COLORS.primary} />
-                            </TouchableOpacity>
-                        </View>
-
-                        <View style={styles.divider} />
-
-                        {/* Location */}
-                        <View style={styles.detailRow}>
-                            <View style={{ flex: 1 }}>
-                                <Text style={styles.detailLabel}>LOCATION</Text>
-                                <View style={styles.detailValueRow}>
-                                    <MaterialIcons name="location-on" size={18} color="#9CA3AF" />
-                                    <Text style={styles.detailValue}>No. 12, Hospital Road, Jaffna</Text>
-                                </View>
-                            </View>
-                            <TouchableOpacity style={styles.editButton}>
-                                <MaterialIcons name="edit" size={20} color={COLORS.primary} />
-                            </TouchableOpacity>
-                        </View>
-
-                        <View style={styles.divider} />
-
-                        {/* Preferred Time */}
-                        <View style={styles.detailRow}>
-                            <View style={{ flex: 1 }}>
-                                <Text style={styles.detailLabel}>PREFERRED TIME</Text>
-                                <View style={styles.detailValueRow}>
-                                    <MaterialIcons name="event" size={18} color="#9CA3AF" />
-                                    <Text style={styles.detailValue}>Oct 24, 2023 • 10:00 AM</Text>
-                                </View>
-                            </View>
-                            <TouchableOpacity style={styles.editButton}>
-                                <MaterialIcons name="edit" size={20} color={COLORS.primary} />
-                            </TouchableOpacity>
-                        </View>
-
-                    </View>
+                <Text style={styles.detailValue}>
+                  {requestData.scheduledDate}
+                </Text>
+              </View>
+              <View style={styles.detailItem}>
+                <View style={styles.detailLabelRow}>
+                  <Clock size={14} color="#94a3b8" />
+                  <Text style={styles.detailLabel}>Time</Text>
                 </View>
-
-                {/* Info Box */}
-                <View style={styles.infoBox}>
-                    <View style={styles.infoIconContainer}>
-                        <MaterialIcons name="info" size={20} color={COLORS.secondary} />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                        <Text style={styles.infoTitle}>WHAT HAPPENS NEXT?</Text>
-                        <View style={styles.infoList}>
-                            <View style={styles.infoListItem}>
-                                <View style={styles.bulletPoint} />
-                                <Text style={styles.infoText}>Your request is broadcast to verified pros.</Text>
-                            </View>
-                            <View style={styles.infoListItem}>
-                                <View style={styles.bulletPoint} />
-                                <Text style={styles.infoText}>Receive multiple quotes within minutes.</Text>
-                            </View>
-                            <View style={styles.infoListItem}>
-                                <View style={styles.bulletPoint} />
-                                <Text style={styles.infoText}>Compare ratings and hire the best fit.</Text>
-                            </View>
-                        </View>
-                    </View>
-                </View>
-
-                {/* Terms Checkbox */}
-                <TouchableOpacity
-                    style={styles.checkboxContainer}
-                    activeOpacity={1}
-                    onPress={() => setAgreed(!agreed)}
-                >
-                    <View style={[styles.checkbox, agreed && styles.checkboxChecked]}>
-                        {agreed && <MaterialIcons name="check" size={14} color="white" />}
-                    </View>
-                    <Text style={styles.checkboxLabel}>
-                        I agree to the <Text style={styles.linkText}>Terms & Conditions</Text> and confirm the details are correct.
-                    </Text>
-                </TouchableOpacity>
-
-                {/* Submit Button */}
-                <TouchableOpacity style={styles.submitButtonWrapper} activeOpacity={0.9}>
-                    <LinearGradient
-                        colors={[COLORS.primary, COLORS.emerald600]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        style={styles.submitButton}
-                    >
-                        <View style={styles.submitIcon}>
-                            <MaterialIcons name="check" size={20} color="white" />
-                        </View>
-                        <Text style={styles.submitButtonText}>SUBMIT REQUEST</Text>
-                    </LinearGradient>
-                </TouchableOpacity>
-
-            </ScrollView>
-
-            {/* Bottom Nav Placeholder (Visual Only to match request) */}
-            <View style={styles.bottomNav}>
-                <TouchableOpacity style={styles.navItem} onPress={() => router.push('/client-home')}>
-                    <MaterialIcons name="home" size={28} color={COLORS.textGrayLight} />
-                    <Text style={styles.navLabel}>Home</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.navItem}>
-                    <MaterialIcons name="add-circle" size={28} color={COLORS.primary} />
-                    <Text style={[styles.navLabel, { color: COLORS.primary, fontWeight: 'bold' }]}>Request</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.navItem}>
-                    <MaterialIcons name="history" size={28} color={COLORS.textGrayLight} />
-                    <Text style={styles.navLabel}>History</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.navItem}>
-                    <MaterialIcons name="chat-bubble-outline" size={28} color={COLORS.textGrayLight} />
-                    <Text style={styles.navLabel}>Chats</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.navItem}>
-                    <MaterialIcons name="person-outline" size={28} color={COLORS.textGrayLight} />
-                    <Text style={styles.navLabel}>Profile</Text>
-                </TouchableOpacity>
+                <Text style={styles.detailValue}>
+                  {requestData.scheduledTime}
+                </Text>
+              </View>
             </View>
-        </SafeAreaView>
-    );
+
+            <View style={styles.divider} />
+
+            {/* Payment Method Preview */}
+            <View style={styles.paymentRow}>
+              <View style={styles.paymentLeft}>
+                <CreditCard size={16} color="#475569" />
+                <Text style={styles.paymentText}>Payment Method</Text>
+              </View>
+              <View style={styles.paymentRight}>
+                <Text style={styles.cashText}>Cash on Delivery</Text>
+                <ChevronDown size={14} color="#94a3b8" />
+              </View>
+            </View>
+
+            {/* Total Estimation (Mock) */}
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>Estimated Total</Text>
+              <Text style={styles.totalValue}>Pending Quote</Text>
+            </View>
+            <Text style={styles.disclaimerText}>
+              Final price will be determined after on-site inspection.
+            </Text>
+          </View>
+
+          {/* Terms Agreement */}
+          <TouchableOpacity
+            style={styles.termsContainer}
+            activeOpacity={0.8}
+            onPress={() => setIsAgreed(!isAgreed)}
+          >
+            <View
+              style={[
+                styles.checkbox,
+                isAgreed && {
+                  backgroundColor: COLORS.primary,
+                  borderColor: COLORS.primary,
+                },
+              ]}
+            >
+              {isAgreed && <Check size={14} color="white" />}
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.termsText}>
+                I agree to the{" "}
+                <Text style={styles.linkText}>Terms of Service</Text> and{" "}
+                <Text style={styles.linkText}>Privacy Policy</Text>.
+              </Text>
+            </View>
+          </TouchableOpacity>
+
+          {/* Safety Banner */}
+          <View style={styles.safetyBanner}>
+            <ShieldCheck size={20} color={COLORS.primary} />
+            <Text style={styles.safetyText}>
+              All our workers are verified and background checked for your
+              safety.
+            </Text>
+          </View>
+        </ScrollView>
+      </View>
+
+      {/* Footer Bar */}
+      <View style={styles.bottomBar}>
+        <TouchableOpacity
+          style={styles.submitBtnWrapper}
+          activeOpacity={0.9}
+          onPress={handleSubmit}
+          disabled={submitting}
+        >
+          <LinearGradient
+            colors={
+              isAgreed
+                ? [COLORS.primary, COLORS.primaryDark]
+                : ["#cbd5e1", "#94a3b8"]
+            }
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.submitBtn}
+          >
+            {submitting ? (
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
+              >
+                <Loader2
+                  size={20}
+                  color="white"
+                  style={{ transform: [{ rotate: "45deg" }] }}
+                />
+                {/* Note: Loader2 needs animation, simple rotate for now or just static icon indicating loading if no animation lib */}
+                <Text style={styles.submitBtnText}>Submitting...</Text>
+              </View>
+            ) : (
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
+              >
+                <CheckCircle size={20} color="white" />
+                <Text style={styles.submitBtnText}>CONFIRM BOOKING</Text>
+              </View>
+            )}
+          </LinearGradient>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+  );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: COLORS.backgroundLight,
-    },
-    scrollContent: {
-        paddingHorizontal: 20,
-        paddingBottom: 100, // Space for bottom nav
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        marginBottom: 8,
-    },
-    backButton: {
-        padding: 8,
-        marginLeft: -8,
-        borderRadius: 20,
-    },
-    headerTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: COLORS.textLight,
-        marginLeft: 8,
-    },
-    progressContainer: {
-        marginBottom: 24,
-    },
-    progressLabels: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-end',
-        marginBottom: 6,
-    },
-    stepText: {
-        fontSize: 12,
-        fontWeight: 'bold',
-        color: COLORS.primary,
-    },
-    stepLabel: {
-        fontSize: 10,
-        fontWeight: '500',
-        color: COLORS.textGray,
-        letterSpacing: 1,
-    },
-    progressBarBg: {
-        height: 8,
-        backgroundColor: '#E5E7EB',
-        borderRadius: 4,
-        overflow: 'hidden',
-    },
-    progressBarFill: {
-        width: '100%',
-        height: '100%',
-        backgroundColor: COLORS.primary,
-        borderRadius: 4,
-    },
-    card: {
-        backgroundColor: COLORS.surfaceLight,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: COLORS.borderLight,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 2,
-        marginBottom: 20,
-        overflow: 'hidden',
-    },
-    cardHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: 20,
-        paddingVertical: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: COLORS.borderLight,
-        backgroundColor: '#F9FAFB',
-    },
-    cardHeaderTitleRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-    },
-    cardHeaderTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: COLORS.textLight,
-    },
-    serviceId: {
-        fontSize: 12,
-        color: COLORS.textGray,
-    },
-    cardContent: {
-        padding: 20,
-    },
-    detailRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-    },
-    detailLabel: {
-        fontSize: 10,
-        fontWeight: 'bold',
-        color: '#9CA3AF',
-        letterSpacing: 1,
-        marginBottom: 6,
-    },
-    detailValueRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-    },
-    detailValue: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: COLORS.textLight,
-    },
-    descriptionText: {
-        fontSize: 14,
-        color: '#374151',
-        lineHeight: 20,
-    },
-    editButton: {
-        padding: 6,
-        borderRadius: 20,
-        backgroundColor: '#eff6ff', // blue-50 placeholder-like
-        marginTop: -4,
-    },
-    divider: {
-        height: 1,
-        backgroundColor: COLORS.borderLight,
-        borderStyle: 'dashed', // React Native doesn't support borderStyle on View nicely without borderWidth, simple line is safer or use images for dashed
-        // approximating dashed line visual with opacity
-        opacity: 0.5,
-        marginVertical: 16,
-    },
-    infoBox: {
-        backgroundColor: COLORS.sky50,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: COLORS.sky100,
-        padding: 16,
-        flexDirection: 'row',
-        gap: 16,
-        marginBottom: 24,
-    },
-    infoIconContainer: {
-        backgroundColor: COLORS.sky100,
-        padding: 8,
-        borderRadius: 8,
-        height: 36,
-        width: 36,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    infoTitle: {
-        fontSize: 12,
-        fontWeight: 'bold',
-        color: COLORS.sky900,
-        letterSpacing: 0.5,
-        marginBottom: 8,
-    },
-    infoList: {
-        gap: 8,
-    },
-    infoListItem: {
-        flexDirection: 'row',
-        alignItems: 'flex-start',
-        gap: 8,
-    },
-    bulletPoint: {
-        width: 6,
-        height: 6,
-        borderRadius: 3,
-        backgroundColor: COLORS.secondary,
-        marginTop: 5,
-    },
-    infoText: {
-        fontSize: 12,
-        color: '#075985', // sky-800
-        flex: 1,
-    },
-    checkboxContainer: {
-        flexDirection: 'row',
-        alignItems: 'flex-start',
-        gap: 12,
-        marginBottom: 16,
-        paddingHorizontal: 4,
-    },
-    checkbox: {
-        width: 20,
-        height: 20,
-        borderRadius: 4,
-        borderWidth: 1,
-        borderColor: '#D1D5DB',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginTop: 2,
-        backgroundColor: 'white',
-    },
-    checkboxChecked: {
-        backgroundColor: COLORS.primary,
-        borderColor: COLORS.primary,
-    },
-    checkboxLabel: {
-        flex: 1,
-        fontSize: 13,
-        color: '#4B5563',
-        lineHeight: 20,
-    },
-    linkText: {
-        color: COLORS.primary,
-        fontWeight: '500',
-        textDecorationLine: 'underline',
-    },
-    submitButtonWrapper: {
-        shadowColor: COLORS.primary,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 10,
-        elevation: 8,
-    },
-    submitButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 16,
-        borderRadius: 12,
-        gap: 8,
-    },
-    submitIcon: {
-        // Optional: bounce animation if needed
-    },
-    submitButtonText: {
-        color: 'white',
-        fontSize: 14,
-        fontWeight: 'bold',
-        letterSpacing: 0.5,
-    },
-    bottomNav: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        backgroundColor: COLORS.surfaceLight,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        paddingVertical: 12,
-        paddingHorizontal: 24,
-        borderTopWidth: 1,
-        borderTopColor: COLORS.borderLight,
-        paddingBottom: Platform.OS === 'ios' ? 24 : 12,
-    },
-    navItem: {
-        alignItems: 'center',
-        gap: 4,
-    },
-    navLabel: {
-        fontSize: 10,
-        fontWeight: '500',
-        color: COLORS.textGray,
-    },
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.backgroundLight,
+  },
+  scrollContent: {
+    paddingHorizontal: 24,
+    paddingBottom: 100,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  backButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: "#F1F5F9",
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#0f172a",
+  },
+  stepCardContainer: {
+    marginBottom: 24,
+  },
+  stepCardGradient: {
+    borderRadius: 16,
+    padding: 20,
+    overflow: "hidden",
+    position: "relative",
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  abstractShape1: {
+    position: "absolute",
+    top: -20,
+    right: -20,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: "rgba(255,255,255,0.1)",
+    transform: [{ scale: 1.2 }],
+  },
+  abstractShape2: {
+    position: "absolute",
+    bottom: -20,
+    left: -20,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "rgba(0,0,0,0.05)",
+  },
+  stepCardContent: {
+    zIndex: 1,
+  },
+  stepInfoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    marginBottom: 12,
+  },
+  stepLabel: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: "rgba(255,255,255,0.9)",
+    letterSpacing: 1,
+    marginBottom: 4,
+    textTransform: "uppercase",
+  },
+  stepTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "white",
+  },
+  progressBarBg: {
+    height: 6,
+    backgroundColor: "rgba(0,0,0,0.2)",
+    borderRadius: 3,
+    marginTop: 12,
+    overflow: "hidden",
+  },
+  progressBarFill: {
+    width: "100%",
+    height: "100%",
+    backgroundColor: "white",
+    borderRadius: 3,
+  },
+  receiptCard: {
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+    gap: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  receiptHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  serviceIconBg: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: "#f0fdfa",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  serviceTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#334155",
+  },
+  serviceSub: {
+    fontSize: 12,
+    color: "#94a3b8",
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "#f1f5f9",
+    borderStyle: "dashed",
+    borderWidth: 1,
+    borderColor: "#f1f5f9", // simplified dashed line attempt
+  },
+  detailsRow: {
+    flexDirection: "row",
+    gap: 24,
+  },
+  detailItem: {
+    flex: 1,
+    gap: 4,
+  },
+  detailLabelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  detailLabel: {
+    fontSize: 12,
+    color: "#94a3b8",
+    fontWeight: "500",
+  },
+  detailValue: {
+    fontSize: 14,
+    color: "#334155",
+    fontWeight: "600",
+  },
+  paymentRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  paymentLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  paymentText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#475569",
+  },
+  paymentRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  cashText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#334155",
+  },
+  totalRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 4,
+  },
+  totalLabel: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#334155",
+  },
+  totalValue: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: COLORS.primary,
+  },
+  disclaimerText: {
+    fontSize: 11,
+    color: "#94a3b8",
+    textAlign: "center",
+    marginTop: -8,
+    fontStyle: "italic",
+  },
+  termsContainer: {
+    flexDirection: "row",
+    marginTop: 24,
+    gap: 12,
+    alignItems: "flex-start",
+    paddingHorizontal: 4,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: "#cbd5e1",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "white",
+    marginTop: 2,
+  },
+  termsText: {
+    fontSize: 13,
+    color: "#64748b",
+    lineHeight: 20,
+  },
+  linkText: {
+    color: COLORS.primary,
+    fontWeight: "600",
+  },
+  safetyBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: "#f0fdfa",
+    padding: 16,
+    borderRadius: 16,
+    marginTop: 24,
+  },
+  safetyText: {
+    flex: 1,
+    fontSize: 12,
+    color: "#0f766e",
+    lineHeight: 18,
+  },
+  bottomBar: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "rgba(255,255,255,0.95)",
+    borderTopWidth: 1,
+    borderTopColor: "#e2e8f0",
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    paddingBottom: Platform.OS === "ios" ? 34 : 24,
+  },
+  submitBtnWrapper: {
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  submitBtn: {
+    height: 56,
+    borderRadius: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+  },
+  submitBtnText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
+    letterSpacing: 1,
+  },
 });
