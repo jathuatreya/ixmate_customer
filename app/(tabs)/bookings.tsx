@@ -3,35 +3,27 @@ import { useRouter } from "expo-router";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { BottomNavbar } from "../../components/BottomNavbar";
 import { useSession } from "../../ctx";
 import { db } from "../../utils/firebaseConfig";
 
 const COLORS = {
-  primary: "#2563EB", // Blue-600
-  primaryDark: "#1D4ED8",
-  secondary: "#059669", // Emerald-600
-  backgroundLight: "#F8FAFC",
-  stroke: "#E2E8F0",
-  white: "#FFFFFF",
-  textDark: "#1E293B",
-  textGray: "#64748B",
-  statusActive: "#2563EB",
-  statusCompleted: "#059669",
-  statusPending: "#D97706",
-  statusCancelled: "#DC2626",
-  bgActive: "#EFF6FF",
-  bgCompleted: "#ECFDF5",
-  bgPending: "#FFF7ED",
-  bgCancelled: "#FEF2F2",
+  primary: "#10B981",
+  primaryDark: "#059669",
+  secondary: "#3B82F6",
+  background: "#020617",
+  surface: "#0f172a",
+  border: "#1e293b",
+  textMain: "#f8fafc",
+  textSub: "#94a3b8",
 };
 
 export default function MyRequestsScreen() {
@@ -63,20 +55,19 @@ export default function MyRequestsScreen() {
 
   const getStatusColor = (status: string) => {
     const s = status?.toLowerCase() || "";
-    if (s === "active" || s === "accepted") return COLORS.statusActive;
-    if (s === "pending") return COLORS.statusPending;
-    if (s === "completed") return COLORS.statusCompleted;
-    if (s === "cancelled") return COLORS.statusCancelled;
-    return COLORS.textDark;
+    if (s === "active" || s === "accepted") return COLORS.secondary; // Blue for active/accepted
+    if (s === "pending") return "#D97706"; // Amber for pending
+    if (s === "completed") return COLORS.primary; // Green for completed
+    if (s === "cancelled") return "#DC2626"; // Red for cancelled
+    return COLORS.textMain;
   };
 
   const getStatusBg = (status: string) => {
     const s = status?.toLowerCase() || "";
-    if (s === "active" || s === "accepted") return COLORS.bgActive;
-    if (s === "pending") return COLORS.bgPending;
-    if (s === "completed") return COLORS.bgCompleted;
-    if (s === "cancelled") return COLORS.bgCancelled;
-    return "#f1f5f9";
+    if (s === "pending") return "rgba(217, 119, 6, 0.15)";
+    if (s === "completed") return "rgba(16, 185, 129, 0.15)";
+    if (s === "cancelled") return "rgba(220, 38, 38, 0.15)";
+    return "rgba(59, 130, 246, 0.15)";
   };
 
   const filteredRequests = requests.filter((req) => {
@@ -86,11 +77,6 @@ export default function MyRequestsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor={COLORS.backgroundLight}
-      />
-
       <View style={styles.header}>
         <Text style={[styles.headerTitle, { marginLeft: 0 }]}>My Requests</Text>
       </View>
@@ -100,16 +86,16 @@ export default function MyRequestsScreen() {
           <MaterialIcons
             name="search"
             size={20}
-            color={COLORS.textGray}
+            color={COLORS.textSub}
             style={styles.searchIcon}
           />
-          <TextInput
+          <TextInput autoComplete='off' autoCorrect={false} spellCheck={false}
             style={styles.searchInput}
             placeholder="Search service, worker..."
-            placeholderTextColor={COLORS.textGray}
+            placeholderTextColor={COLORS.textSub}
           />
           <TouchableOpacity style={styles.filterIconBtn}>
-            <MaterialIcons name="tune" size={20} color={COLORS.textGray} />
+            <MaterialIcons name="tune" size={20} color={COLORS.textSub} />
           </TouchableOpacity>
         </View>
       </View>
@@ -151,12 +137,8 @@ export default function MyRequestsScreen() {
       >
         {filteredRequests.length === 0 && (
           <View style={{ alignItems: "center", marginTop: 40, opacity: 0.5 }}>
-            <MaterialIcons
-              name="assignment"
-              size={48}
-              color={COLORS.textGray}
-            />
-            <Text style={{ marginTop: 10, color: COLORS.textGray }}>
+            <MaterialIcons name="assignment" size={48} color={COLORS.textSub} />
+            <Text style={{ marginTop: 10, color: COLORS.textSub }}>
               No requests found
             </Text>
           </View>
@@ -196,7 +178,7 @@ export default function MyRequestsScreen() {
                       <MaterialIcons
                         name="calendar-today"
                         size={12}
-                        color={COLORS.textGray}
+                        color={COLORS.textSub}
                         style={{ marginRight: 4 }}
                       />
                       <Text style={styles.dateText}>
@@ -228,9 +210,7 @@ export default function MyRequestsScreen() {
                     name="location-on"
                     size={18}
                     color={
-                      item.status === "Active"
-                        ? COLORS.primary
-                        : COLORS.textGray
+                      item.status === "Active" ? COLORS.primary : COLORS.textSub
                     }
                     style={{ marginRight: 8 }}
                   />
@@ -243,7 +223,7 @@ export default function MyRequestsScreen() {
                     <MaterialIcons
                       name="person"
                       size={18}
-                      color={COLORS.textGray}
+                      color={COLORS.textSub}
                       style={{ marginRight: 8 }}
                     />
                     <Text style={[styles.detailText, { fontStyle: "italic" }]}>
@@ -282,6 +262,7 @@ export default function MyRequestsScreen() {
             </View>
           ))}
       </ScrollView>
+      <BottomNavbar />
     </SafeAreaView>
   );
 }
@@ -289,19 +270,19 @@ export default function MyRequestsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.backgroundLight,
+    backgroundColor: COLORS.background,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 12,
-    backgroundColor: COLORS.backgroundLight,
+    backgroundColor: COLORS.background,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: "bold",
-    color: COLORS.textDark,
+    color: COLORS.textMain,
   },
   searchContainer: {
     paddingHorizontal: 20,
@@ -323,7 +304,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     height: "100%",
-    color: COLORS.textDark,
+    color: COLORS.textMain,
     fontSize: 14,
   },
   filterIconBtn: {
@@ -355,8 +336,8 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   tabButtonInactive: {
-    backgroundColor: COLORS.white,
-    borderColor: COLORS.stroke,
+    backgroundColor: COLORS.surface,
+    borderColor: COLORS.border,
   },
   tabText: {
     fontSize: 14,
@@ -366,7 +347,7 @@ const styles = StyleSheet.create({
     color: "white",
   },
   tabTextInactive: {
-    color: COLORS.textGray,
+    color: COLORS.textSub,
   },
   listContent: {
     paddingHorizontal: 20,
@@ -374,11 +355,11 @@ const styles = StyleSheet.create({
     gap: 20,
   },
   card: {
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.surface,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: COLORS.stroke,
+    borderColor: COLORS.border,
     borderLeftWidth: 4, // Status color border
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -406,7 +387,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 15,
     fontWeight: "bold",
-    color: COLORS.textDark,
+    color: COLORS.textMain,
     marginBottom: 4,
   },
   dateRow: {
@@ -415,7 +396,7 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 12,
-    color: COLORS.textGray,
+    color: COLORS.textSub,
   },
   statusBadge: {
     paddingHorizontal: 10,
@@ -442,7 +423,7 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: 13,
-    color: COLORS.textGray,
+    color: COLORS.textSub,
     flex: 1,
   },
   actionRow: {
@@ -454,7 +435,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: COLORS.stroke,
+    borderColor: COLORS.border,
     backgroundColor: "white",
     alignItems: "center",
     justifyContent: "center",
@@ -462,7 +443,7 @@ const styles = StyleSheet.create({
   btnOutlineText: {
     fontSize: 13,
     fontWeight: "600",
-    color: COLORS.textDark,
+    color: COLORS.textMain,
   },
   btnPrimary: {
     flex: 1,

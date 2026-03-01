@@ -3,47 +3,35 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
-  Platform,
+  Alert,
   ScrollView,
-  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { BottomNavbar } from "../components/BottomNavbar";
+import { useTheme, getColors } from "../contexts/ThemeContext";
 
 // Theme Colors
 const COLORS = {
-  primary: "#118A7E",
-  emerald500: "#10b981",
-  backgroundLight: "#F5F7FA",
-  backgroundDark: "#121212",
-  surfaceLight: "#FFFFFF",
-  surfaceDark: "#1E1E1E",
-  textLight: "#1F2937",
-  textGray: "#6B7280",
-  textGrayLight: "#9CA3AF",
-  borderLight: "#E5E7EB",
-  emerald50: "#ecfdf5",
-  emerald100: "#d1fae5",
-  orange100: "#ffedd5",
-  orange600: "#ea580c",
-  blue100: "#dbeafe",
-  blue600: "#2563eb",
-  amber100: "#fef3c7",
-  amber700: "#b45309",
-  purple100: "#f3e8ff",
-  purple600: "#9333ea",
-  cyan100: "#cffafe",
-  cyan600: "#0891b2",
+  primary: "#10B981",
+  primaryDark: "#059669",
+  background: "#020617",
+  surface: "#0f172a",
+  border: "#1e293b",
+  textMain: "#f8fafc",
+  textSub: "#94a3b8",
 };
 
 import { useRequest } from "../contexts/RequestContext";
 
 export default function CreateRequestScreen() {
   const router = useRouter();
-  // const [selectedService, setSelectedService] = useState('plumbing');
+  const { theme } = useTheme();
+  const THEME_COLORS = getColors(theme);
+  const isDark = theme === "dark";
   const { requestData, updateRequestData } = useRequest();
   const selectedService = requestData.serviceType;
 
@@ -56,86 +44,48 @@ export default function CreateRequestScreen() {
       id: "plumbing",
       name: "Plumbing",
       icon: "plumbing",
-      colorBg: COLORS.emerald100,
-      colorIcon: COLORS.primary,
-    },
-    {
-      id: "electrical",
-      name: "Electrical",
-      icon: "bolt",
-      colorBg: COLORS.orange100,
-      colorIcon: COLORS.orange600,
+      colorBg: "rgba(16, 185, 129, 0.1)",
+      colorIcon: "#10B981",
     },
     {
       id: "cleaning",
       name: "Cleaning",
       icon: "cleaning-services",
-      colorBg: COLORS.blue100,
-      colorIcon: COLORS.blue600,
+      colorBg: "rgba(59, 130, 246, 0.1)",
+      colorIcon: "#3B82F6",
     },
-    {
-      id: "carpentry",
-      name: "Carpentry",
-      icon: "carpenter",
-      colorBg: COLORS.amber100,
-      colorIcon: COLORS.amber700,
-    }, // using MaterialIcons carpenter if available, or build
     {
       id: "painting",
       name: "Painting",
       icon: "format-paint",
-      colorBg: COLORS.purple100,
-      colorIcon: COLORS.purple600,
+      colorBg: "rgba(168, 85, 247, 0.1)",
+      colorIcon: "#A855F7",
     },
     {
-      id: "ac_repair",
-      name: "AC Repair",
-      icon: "ac-unit",
-      colorBg: COLORS.cyan100,
-      colorIcon: COLORS.cyan600,
-    },
-    {
-      id: "other",
-      name: "Other",
-      icon: "more-horiz",
-      colorBg: COLORS.textGrayLight + "20", // lighter gray
-      colorIcon: COLORS.textLight,
+      id: "mason",
+      name: "Masonry (Mason)",
+      icon: "foundation",
+      colorBg: "rgba(245, 158, 11, 0.1)",
+      colorIcon: "#F59E0B",
     },
   ];
 
-  const [customService, setCustomService] = React.useState("");
-
   const handleContinue = () => {
-    if (selectedService === "other" && !customService.trim()) {
-      // If 'other' requires explicit text, block or just let them proceed as 'Other'
-      // For now let's just update context if they typed something
-    }
-    if (selectedService === "other" && customService.trim()) {
-      updateRequestData({ serviceType: customService });
+    if (!selectedService) {
+      Alert.alert(
+        "Selection Required",
+        "Please select a service category to continue.",
+      );
+      return;
     }
     router.push("/request-details");
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor={COLORS.backgroundLight}
-      />
-
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <MaterialIcons name="arrow-back" size={24} color={COLORS.textLight} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Create Request</Text>
-        <TouchableOpacity style={styles.menuButton}>
-          <MaterialIcons name="more-vert" size={24} color={COLORS.textLight} />
-        </TouchableOpacity>
-      </View>
-
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: THEME_COLORS.background }]}
+      edges={["left", "right"]}
+    >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -143,14 +93,23 @@ export default function CreateRequestScreen() {
         {/* Step 1 Card */}
         <View style={styles.stepCardContainer}>
           <LinearGradient
-            colors={[COLORS.primary, COLORS.emerald500]}
+            colors={
+              isDark ? ["#1e293b", "#0f172a"] : [COLORS.primary, COLORS.primary]
+            }
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
-            style={styles.stepCardGradient}
+            style={[
+              styles.stepCardGradient,
+              isDark && { borderColor: THEME_COLORS.border, borderWidth: 1 },
+            ]}
           >
             {/* Abstract Background Shapes */}
-            <View style={styles.abstractShape1} />
-            <View style={styles.abstractShape2} />
+            {!isDark && (
+              <>
+                <View style={styles.abstractShape1} />
+                <View style={styles.abstractShape2} />
+              </>
+            )}
 
             <View style={styles.stepCardContent}>
               <View style={styles.stepInfoRow}>
@@ -165,60 +124,92 @@ export default function CreateRequestScreen() {
                 />
               </View>
 
-              <View style={styles.progressBarBg}>
-                <View style={styles.progressBarFill} />
+              <View
+                style={[
+                  styles.progressBarBg,
+                  isDark && { backgroundColor: THEME_COLORS.border },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.progressBarFill,
+                    isDark && { backgroundColor: THEME_COLORS.primary },
+                  ]}
+                />
               </View>
             </View>
           </LinearGradient>
         </View>
 
         <View style={styles.selectionSection}>
-          <Text style={styles.chooseText}>Choose a category</Text>
+          <Text style={[styles.chooseText, { color: THEME_COLORS.textMain }]}>
+            Choose a category
+          </Text>
 
-          <View style={styles.gridContainer}>
+          <View style={styles.listContainer}>
             {services.map((service) => (
               <TouchableOpacity
                 key={service.id}
                 style={[
-                  styles.serviceCard,
-                  selectedService === service.id && styles.serviceCardSelected,
+                  styles.serviceItem,
+                  {
+                    backgroundColor: THEME_COLORS.surface,
+                    borderColor: THEME_COLORS.border,
+                  },
+                  selectedService === service.id && {
+                    borderColor: THEME_COLORS.primary,
+                    borderWidth: 2,
+                  },
                 ]}
                 onPress={() => setSelectedService(service.id)}
                 activeOpacity={0.8}
               >
-                <View
-                  style={[
-                    styles.iconContainer,
-                    { backgroundColor: service.colorBg },
-                  ]}
-                >
-                  <MaterialIcons
-                    name={service.icon as any}
-                    size={28}
-                    color={service.colorIcon}
-                  />
-                </View>
-                <Text
-                  style={[
-                    styles.serviceName,
-                    selectedService === service.id && {
-                      color: COLORS.primary,
-                      fontWeight: "bold",
-                    },
-                  ]}
-                >
-                  {service.name}
-                </Text>
-
-                {selectedService === service.id && (
-                  <View style={styles.checkIcon}>
+                <View style={styles.itemLeftContent}>
+                  <View
+                    style={[
+                      styles.iconContainer,
+                      {
+                        backgroundColor: isDark
+                          ? THEME_COLORS.background
+                          : service.colorBg,
+                      },
+                    ]}
+                  >
                     <MaterialIcons
-                      name="check-circle"
-                      size={20}
-                      color={COLORS.primary}
+                      name={service.icon as any}
+                      size={24}
+                      color={isDark ? THEME_COLORS.primary : service.colorIcon}
                     />
                   </View>
-                )}
+                  <Text
+                    style={[
+                      styles.serviceName,
+                      { color: THEME_COLORS.textMain },
+                      selectedService === service.id && {
+                        color: THEME_COLORS.primary,
+                        fontWeight: "bold",
+                      },
+                    ]}
+                  >
+                    {service.name}
+                  </Text>
+                </View>
+
+                <View>
+                  <MaterialIcons
+                    name={
+                      selectedService === service.id
+                        ? "check-circle"
+                        : "radio-button-unchecked"
+                    }
+                    size={24}
+                    color={
+                      selectedService === service.id
+                        ? THEME_COLORS.primary
+                        : THEME_COLORS.textSub
+                    }
+                  />
+                </View>
               </TouchableOpacity>
             ))}
           </View>
@@ -230,7 +221,11 @@ export default function CreateRequestScreen() {
             onPress={handleContinue}
           >
             <LinearGradient
-              colors={[COLORS.primary, COLORS.emerald500]}
+              colors={
+                isDark
+                  ? [THEME_COLORS.primary, THEME_COLORS.primary]
+                  : [COLORS.primary, COLORS.primary]
+              }
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.continueButton}
@@ -241,51 +236,7 @@ export default function CreateRequestScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
-
-      {/* Bottom Nav */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => router.push("/client-home")}
-        >
-          <MaterialIcons name="home" size={26} color={COLORS.textGrayLight} />
-          <Text style={styles.navLabel}>Home</Text>
-        </TouchableOpacity>
-
-        <View style={styles.centerNavContainer}>
-          <View style={styles.centerNavButton}>
-            <MaterialIcons name="add" size={32} color="white" />
-          </View>
-          <Text style={styles.centerNavLabel}>Request</Text>
-        </View>
-
-        <TouchableOpacity style={styles.navItem}>
-          <MaterialIcons
-            name="history"
-            size={26}
-            color={COLORS.textGrayLight}
-          />
-          <Text style={styles.navLabel}>History</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.navItem}>
-          <MaterialIcons
-            name="chat-bubble-outline"
-            size={26}
-            color={COLORS.textGrayLight}
-          />
-          <Text style={styles.navLabel}>Chats</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.navItem}>
-          <MaterialIcons
-            name="person-outline"
-            size={26}
-            color={COLORS.textGrayLight}
-          />
-          <Text style={styles.navLabel}>Profile</Text>
-        </TouchableOpacity>
-      </View>
+      <BottomNavbar />
     </SafeAreaView>
   );
 }
@@ -293,7 +244,7 @@ export default function CreateRequestScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.backgroundLight,
+    backgroundColor: "#020617",
   },
   scrollContent: {
     paddingBottom: 110, // Space for bottom nav + floating center button
@@ -302,13 +253,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: "#0f172a",
+    borderBottomWidth: 1,
+    borderBottomColor: "#1e293b",
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    color: COLORS.textLight,
+    color: COLORS.textMain,
   },
   backButton: {
     padding: 8,
@@ -330,7 +284,7 @@ const styles = StyleSheet.create({
     padding: 20,
     overflow: "hidden",
     position: "relative",
-    shadowColor: COLORS.emerald500,
+    shadowColor: COLORS.primary,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.25,
     shadowRadius: 12,
@@ -398,54 +352,50 @@ const styles = StyleSheet.create({
   chooseText: {
     fontSize: 14,
     fontWeight: "600",
-    color: COLORS.textGray,
+    color: COLORS.textSub,
     marginBottom: 16,
   },
-  gridContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    gap: 16,
+  listContainer: {
+    gap: 12,
   },
-  serviceCard: {
-    width: "47%", // approx half with gap
-    aspectRatio: 1,
-    backgroundColor: COLORS.surfaceLight,
+  serviceItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: COLORS.surface,
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: "transparent", // Default
-    alignItems: "center",
-    justifyContent: "center",
+    borderColor: "transparent",
     padding: 16,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
-    position: "relative",
-    marginBottom: 8,
   },
-  serviceCardSelected: {
+  serviceItemSelected: {
     borderColor: COLORS.primary,
-    backgroundColor: COLORS.emerald50,
+    backgroundColor: "rgba(16, 185, 129, 0.1)",
+  },
+  itemLeftContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
   },
   iconContainer: {
     width: 48,
     height: 48,
-    borderRadius: 24,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 12,
   },
   serviceName: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "500",
-    color: COLORS.textLight,
+    color: COLORS.textMain,
   },
   checkIcon: {
-    position: "absolute",
-    top: 12,
-    right: 12,
+    // Legacy mapping if needed by other components, but we use item right view now
   },
   continueButtonContainer: {
     paddingHorizontal: 24,
@@ -453,7 +403,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   continueButtonWrapper: {
-    shadowColor: COLORS.emerald500,
+    shadowColor: COLORS.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -471,58 +421,5 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
     fontWeight: "bold",
-  },
-  bottomNav: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: COLORS.surfaceLight,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.borderLight,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: Platform.OS === "ios" ? 24 : 12,
-    zIndex: 10,
-    height: 80,
-    alignItems: "flex-start",
-  },
-  navItem: {
-    alignItems: "center",
-    gap: 4,
-    marginTop: 4,
-  },
-  navLabel: {
-    fontSize: 10,
-    fontWeight: "500",
-    color: COLORS.textGrayLight,
-  },
-  centerNavContainer: {
-    position: "relative",
-    alignItems: "center",
-    top: -28,
-  },
-  centerNavButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: COLORS.primary,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 4,
-    borderWidth: 4,
-    borderColor: COLORS.backgroundLight, // match bg to look like cutout
-    shadowColor: COLORS.emerald500,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  centerNavLabel: {
-    fontSize: 10,
-    fontWeight: "bold",
-    color: COLORS.primary,
   },
 });

@@ -1,20 +1,10 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import {
-  AlertCircle,
-  ArrowLeft,
-  ArrowRight,
-  Camera,
-  FileText,
-  Image as ImageIcon,
-  X,
-} from "lucide-react-native";
+import { AlertCircle, ArrowRight, FileText } from "lucide-react-native";
 import React, { useState } from "react";
 import {
   Alert,
-  Platform,
   ScrollView,
-  StatusBar,
   StyleSheet,
   Text,
   TextInput,
@@ -22,20 +12,20 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { BottomNavbar } from "../components/BottomNavbar";
 import { useRequest } from "../contexts/RequestContext";
 
 const COLORS = {
-  primary: "#118A7E",
-  primaryDark: "#0e7066",
-  backgroundLight: "#F8FAFC",
-  surfaceLight: "#FFFFFF",
-  textLight: "#1e293b", // slate-800
-  textGray: "#64748b", // slate-500
-  borderLight: "#e2e8f0",
-  secondary: "#0E7490", // cyan-700
-  lowUrgency: "#3b82f6", // blue-500
-  normalUrgency: "#f59e0b", // amber-500
-  highUrgency: "#ef4444", // red-500
+  primary: "#10B981",
+  primaryDark: "#059669",
+  background: "#020617",
+  surface: "#0f172a",
+  textMain: "#f8fafc",
+  textSub: "#94a3b8",
+  border: "#1e293b",
+  lowUrgency: "#3b82f6",
+  normalUrgency: "#f59e0b",
+  highUrgency: "#ef4444",
 };
 
 type UrgencyLevel = "low" | "normal" | "high";
@@ -45,6 +35,7 @@ export default function RequestDetailsScreen() {
   const { requestData, setRequestData } = useRequest();
 
   const [description, setDescription] = useState(requestData.description || "");
+  const [budget, setBudget] = useState(requestData.budget || "");
   const [urgency, setUrgency] = useState<UrgencyLevel>(
     requestData.urgency || "normal",
   );
@@ -59,7 +50,14 @@ export default function RequestDetailsScreen() {
       );
       return;
     }
-    setRequestData({ ...requestData, description, urgency, photos });
+    if (!budget.trim()) {
+      Alert.alert(
+        "Missing Budget",
+        "Please provide an estimated budget for the service.",
+      );
+      return;
+    }
+    setRequestData({ ...requestData, description, urgency, budget });
     router.push("/request-location");
   };
 
@@ -73,24 +71,7 @@ export default function RequestDetailsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor={COLORS.backgroundLight}
-      />
-
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <ArrowLeft size={24} color={COLORS.textLight} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Request Details</Text>
-        <View style={{ width: 40 }} />
-      </View>
-
+    <SafeAreaView style={styles.container} edges={["left", "right"]}>
       <View style={{ flex: 1 }}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -133,10 +114,10 @@ export default function RequestDetailsScreen() {
           </View>
 
           <View style={styles.textAreaContainer}>
-            <TextInput
+            <TextInput autoComplete='off' autoCorrect={false} spellCheck={false}
               style={styles.textArea}
               placeholder="e.g. My kitchen sink is leaking from the pipe joint..."
-              placeholderTextColor="#94a3b8"
+              placeholderTextColor={COLORS.textSub}
               multiline
               numberOfLines={6}
               value={description}
@@ -146,51 +127,30 @@ export default function RequestDetailsScreen() {
             <Text style={styles.charCount}>{description.length}/500</Text>
           </View>
 
-          {/* Photos Section */}
+          {/* Budget Section */}
           <View style={[styles.sectionHeader, { marginTop: 24 }]}>
-            <Text style={styles.sectionTitle}>Add Photos/Videos</Text>
-            <Text style={styles.sectionSubtitle}>Optional but helpful</Text>
+            <Text style={styles.sectionTitle}>Budget</Text>
+            <Text style={styles.sectionSubtitle}>Estimated budget in LKR</Text>
           </View>
 
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.photoList}
+          <View
+            style={[
+              styles.textAreaContainer,
+              { height: 56, paddingVertical: 0, justifyContent: "center" },
+            ]}
           >
-            <TouchableOpacity
+            <TextInput autoComplete='off' autoCorrect={false} spellCheck={false}
               style={[
-                styles.addPhotoBtn,
-                {
-                  backgroundColor: "#f1f5f9",
-                  borderStyle: "dashed",
-                  borderWidth: 1,
-                  borderColor: "#cbd5e1",
-                },
+                styles.textArea,
+                { lineHeight: undefined, height: "100%", paddingVertical: 16 },
               ]}
-              onPress={handleAddPhoto}
-            >
-              <Camera size={24} color={COLORS.primary} />
-              <Text style={styles.addPhotoText}>Add</Text>
-            </TouchableOpacity>
-            {photos.map((p, i) => (
-              <View key={i} style={styles.photoItem}>
-                {/* Mock Image Placeholder */}
-                <View
-                  style={[styles.photoMock, { backgroundColor: "#e2e8f0" }]}
-                >
-                  <ImageIcon size={20} color="#94a3b8" />
-                </View>
-                <TouchableOpacity
-                  style={styles.removePhoto}
-                  onPress={() =>
-                    setPhotos(photos.filter((_, idx) => idx !== i))
-                  }
-                >
-                  <X size={12} color="white" />
-                </TouchableOpacity>
-              </View>
-            ))}
-          </ScrollView>
+              placeholder="e.g. 5000"
+              placeholderTextColor={COLORS.textSub}
+              keyboardType="numeric"
+              value={budget}
+              onChangeText={setBudget}
+            />
+          </View>
 
           {/* Urgency Section */}
           <View style={[styles.sectionHeader, { marginTop: 24 }]}>
@@ -198,7 +158,7 @@ export default function RequestDetailsScreen() {
               style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
             >
               <Text style={styles.sectionTitle}>Urgency</Text>
-              <AlertCircle size={14} color="#94a3b8" />
+              <AlertCircle size={14} color={COLORS.textSub} />
             </View>
           </View>
 
@@ -219,7 +179,7 @@ export default function RequestDetailsScreen() {
                   styles.urgencyIcon,
                   {
                     backgroundColor:
-                      urgency === "low" ? COLORS.lowUrgency : "#e2e8f0",
+                      urgency === "low" ? COLORS.lowUrgency : COLORS.border,
                   },
                 ]}
               >
@@ -254,7 +214,9 @@ export default function RequestDetailsScreen() {
                   styles.urgencyIcon,
                   {
                     backgroundColor:
-                      urgency === "normal" ? COLORS.normalUrgency : "#e2e8f0",
+                      urgency === "normal"
+                        ? COLORS.normalUrgency
+                        : COLORS.border,
                   },
                 ]}
               />
@@ -287,7 +249,7 @@ export default function RequestDetailsScreen() {
                   styles.urgencyIcon,
                   {
                     backgroundColor:
-                      urgency === "high" ? COLORS.highUrgency : "#e2e8f0",
+                      urgency === "high" ? COLORS.highUrgency : COLORS.border,
                   },
                 ]}
               />
@@ -304,27 +266,28 @@ export default function RequestDetailsScreen() {
               </Text>
             </TouchableOpacity>
           </View>
+
+          <View style={styles.continueButtonContainer}>
+            <TouchableOpacity
+              style={styles.nextButtonWrapper}
+              activeOpacity={0.9}
+              onPress={handleNext}
+            >
+              <LinearGradient
+                colors={[COLORS.primary, COLORS.primaryDark]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.nextButton}
+              >
+                <Text style={styles.nextButtonText}>NEXT STEP</Text>
+                <ArrowRight size={20} color="white" />
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
         </ScrollView>
       </View>
 
-      {/* Footer Bar */}
-      <View style={styles.bottomBar}>
-        <TouchableOpacity
-          style={styles.nextButtonWrapper}
-          activeOpacity={0.9}
-          onPress={handleNext}
-        >
-          <LinearGradient
-            colors={[COLORS.primary, COLORS.primaryDark]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.nextButton}
-          >
-            <Text style={styles.nextButtonText}>NEXT STEP</Text>
-            <ArrowRight size={20} color="white" />
-          </LinearGradient>
-        </TouchableOpacity>
-      </View>
+      <BottomNavbar />
     </SafeAreaView>
   );
 }
@@ -332,7 +295,7 @@ export default function RequestDetailsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.backgroundLight,
+    backgroundColor: "#020617",
   },
   scrollContent: {
     paddingHorizontal: 24,
@@ -355,6 +318,11 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#0f172a",
   },
+  statValue: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: COLORS.textMain,
+  },
   stepCardContainer: {
     paddingHorizontal: 0,
     marginBottom: 24,
@@ -364,7 +332,7 @@ const styles = StyleSheet.create({
     padding: 20,
     overflow: "hidden",
     position: "relative",
-    shadowColor: COLORS.primary,
+    shadowColor: COLORS.primaryDark,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.25,
     shadowRadius: 12,
@@ -387,7 +355,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: "rgba(0,0,0,0.05)",
+    backgroundColor: "rgba(255,255,255,0.05)",
   },
   stepCardContent: {
     zIndex: 1,
@@ -403,8 +371,8 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "rgba(255,255,255,0.9)",
     letterSpacing: 1,
-    marginBottom: 4,
     textTransform: "uppercase",
+    marginBottom: 4,
   },
   stepTitle: {
     fontSize: 20,
@@ -413,7 +381,7 @@ const styles = StyleSheet.create({
   },
   progressBarBg: {
     height: 6,
-    backgroundColor: "rgba(0,0,0,0.2)",
+    backgroundColor: "rgba(255,255,255,0.2)",
     borderRadius: 3,
     marginTop: 12,
     overflow: "hidden",
@@ -430,31 +398,31 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#334155",
+    color: COLORS.textMain,
   },
   sectionSubtitle: {
     fontSize: 12,
-    color: "#94a3b8",
+    color: COLORS.textSub,
     marginTop: 2,
   },
   textAreaContainer: {
-    backgroundColor: "white",
+    backgroundColor: "#0f172a",
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#e2e8f0",
+    borderColor: "#1e293b",
     padding: 16,
     height: 160,
   },
   textArea: {
     flex: 1,
     fontSize: 15,
-    color: "#334155",
+    color: "#f8fafc",
     lineHeight: 22,
   },
   charCount: {
     textAlign: "right",
     fontSize: 11,
-    color: "#cbd5e1",
+    color: COLORS.textSub,
     marginTop: 4,
   },
   photoList: {
@@ -502,14 +470,14 @@ const styles = StyleSheet.create({
   },
   urgencyCard: {
     flex: 1,
-    backgroundColor: "white",
+    backgroundColor: "#0f172a",
     borderRadius: 16,
     paddingVertical: 16,
     paddingHorizontal: 8,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1.5,
-    borderColor: "#e2e8f0",
+    borderColor: "#1e293b",
     gap: 6,
   },
   urgencyIcon: {
@@ -520,19 +488,15 @@ const styles = StyleSheet.create({
   urgencyLabel: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#64748b",
+    color: COLORS.textSub,
+  },
+  continueButtonContainer: {
+    marginTop: 24,
+    marginBottom: 24,
   },
   bottomBar: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: "rgba(255,255,255,0.95)",
-    borderTopWidth: 1,
-    borderTopColor: "#e2e8f0",
     paddingVertical: 16,
     paddingHorizontal: 24,
-    paddingBottom: Platform.OS === "ios" ? 34 : 24,
   },
   nextButtonWrapper: {
     shadowColor: COLORS.primary,

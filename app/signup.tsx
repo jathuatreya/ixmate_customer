@@ -1,19 +1,20 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { Stack, useRouter } from "expo-router";
+
 import {
+  ArrowLeft,
   ArrowRight,
   Check,
   ChevronDown,
   Eye,
   EyeOff,
-  Hammer,
-  Lock,
-  Mail,
-  User,
 } from "lucide-react-native";
 import React, { useState } from "react";
 import {
-  SafeAreaView,
+  Alert,
+  Animated,
+  Image,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -21,18 +22,20 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 // Theme Colors based on user provided config
 const COLORS = {
-  primary: "#13ec5b",
-  primaryDark: "#0ea640",
-  backgroundLight: "#ffffff",
-  backgroundDark: "#102216",
-  surfaceLight: "#f9fafb",
-  surfaceDark: "#1c2e22",
-  textMain: "#111827", // gray-900
-  textSub: "#6b7280", // gray-500
-  border: "#e5e7eb", // gray-200
+  primary: "#10B981",
+  primaryDark: "#059669",
+  background: "#020617",
+  surface: "#0f172a",
+  textMain: "#f8fafc",
+  textSub: "#94a3b8",
+  border: "#1e293b",
   white: "#ffffff",
 };
 
@@ -61,33 +64,59 @@ const SHADOWS = {
   },
 };
 
-import { Alert } from "react-native";
 import { useSession } from "../ctx";
 
 export default function SignupScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { signUp } = useSession();
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
     phoneCode: "+94",
     phoneNumber: "",
+    address: "",
+    city: "",
+    district: "",
     password: "",
+    confirmPassword: "",
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
-
   const [activeField, setActiveField] = useState<string | null>(null);
+
+  const buttonScale = React.useRef(new Animated.Value(1)).current;
+  const loginScale = React.useRef(new Animated.Value(1)).current;
+  const termsScale = React.useRef(new Animated.Value(1)).current;
+
+  const animateValue = (ref: Animated.Value, toValue: number) => {
+    Animated.spring(ref, {
+      toValue,
+      useNativeDriver: true,
+      tension: 100,
+      friction: 5,
+    }).start();
+  };
 
   const handleSignup = async () => {
     if (
       !formData.fullName ||
       !formData.email ||
       !formData.phoneNumber ||
-      !formData.password
+      !formData.address ||
+      !formData.city ||
+      !formData.district ||
+      !formData.password ||
+      !formData.confirmPassword
     ) {
       Alert.alert("Error", "Please fill in all fields");
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      Alert.alert("Error", "Passwords do not match");
       return;
     }
 
@@ -104,8 +133,15 @@ export default function SignupScreen() {
         formData.password,
         formData.fullName,
         fullPhoneNumber,
+        formData.address,
+        formData.city,
+        formData.district,
       );
-      // Router redirect handled by useProtectedRoute
+      Alert.alert(
+        "Success",
+        "Account created successfully! Please log in to continue.",
+        [{ text: "OK", onPress: () => router.replace("/login") }],
+      );
     } catch (error: any) {
       Alert.alert("Signup Failed", error.message || "Something went wrong");
     } finally {
@@ -117,23 +153,32 @@ export default function SignupScreen() {
     <SafeAreaView style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: insets.bottom + 40 },
+        ]}
         showsVerticalScrollIndicator={false}
       >
+        {/* Back Button */}
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <ArrowLeft size={24} color={COLORS.textMain} />
+        </TouchableOpacity>
         {/* Header Section */}
         <View style={styles.header}>
           {/* Floating Logo */}
-          <LinearGradient
-            colors={["#13ec5b", "#0c8a35"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.logoContainer}
-          >
-            <Hammer size={36} color="white" />
-          </LinearGradient>
+          <View style={styles.logoContainer}>
+            <Image
+              source={require("../assets/images/logo.png")}
+              style={{ width: "100%", height: "100%", borderRadius: 24 }}
+              resizeMode="contain"
+            />
+          </View>
 
           {/* App Name & Tagline */}
-          <Text style={styles.appName}>FixMate Lanka</Text>
+          <Text style={styles.appName}>Fix Mate </Text>
           <Text style={styles.tagline}>Premium Home Services</Text>
         </View>
 
@@ -144,16 +189,13 @@ export default function SignupScreen() {
           <View style={styles.inputsWrapper}>
             {/* Full Name */}
             <View style={styles.inputContainer}>
-              <View style={styles.inputIcon}>
-                <User size={20} color={COLORS.textSub} />
-              </View>
-              <TextInput
+              <TextInput autoComplete='off' autoCorrect={false} spellCheck={false}
                 style={[
                   styles.input,
                   activeField === "fullName" && styles.inputActive,
                 ]}
                 placeholder="Full Name"
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={COLORS.textSub}
                 value={formData.fullName}
                 onChangeText={(text) =>
                   setFormData({ ...formData, fullName: text })
@@ -165,16 +207,13 @@ export default function SignupScreen() {
 
             {/* Email */}
             <View style={styles.inputContainer}>
-              <View style={styles.inputIcon}>
-                <Mail size={20} color={COLORS.textSub} />
-              </View>
-              <TextInput
+              <TextInput autoComplete='off' autoCorrect={false} spellCheck={false}
                 style={[
                   styles.input,
                   activeField === "email" && styles.inputActive,
                 ]}
                 placeholder="Email Address"
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={COLORS.textSub}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 value={formData.email}
@@ -204,10 +243,10 @@ export default function SignupScreen() {
                   activeField === "phone" && styles.inputActive,
                 ]}
               >
-                <TextInput
+                <TextInput autoComplete='off' autoCorrect={false} spellCheck={false}
                   style={styles.phoneInput}
                   placeholder="77 123 4567"
-                  placeholderTextColor="#9ca3af"
+                  placeholderTextColor={COLORS.textSub}
                   keyboardType="phone-pad"
                   value={formData.phoneNumber}
                   onChangeText={(text) =>
@@ -219,19 +258,70 @@ export default function SignupScreen() {
               </View>
             </View>
 
+            {/* Address */}
+            <View style={styles.inputContainer}>
+              <TextInput autoComplete='off' autoCorrect={false} spellCheck={false}
+                style={[
+                  styles.input,
+                  activeField === "address" && styles.inputActive,
+                ]}
+                placeholder="Address"
+                placeholderTextColor={COLORS.textSub}
+                value={formData.address}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, address: text })
+                }
+                onFocus={() => setActiveField("address")}
+                onBlur={() => setActiveField(null)}
+              />
+            </View>
+
+            {/* City */}
+            <View style={styles.inputContainer}>
+              <TextInput autoComplete='off' autoCorrect={false} spellCheck={false}
+                style={[
+                  styles.input,
+                  activeField === "city" && styles.inputActive,
+                ]}
+                placeholder="City"
+                placeholderTextColor={COLORS.textSub}
+                value={formData.city}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, city: text })
+                }
+                onFocus={() => setActiveField("city")}
+                onBlur={() => setActiveField(null)}
+              />
+            </View>
+
+            {/* District */}
+            <View style={styles.inputContainer}>
+              <TextInput autoComplete='off' autoCorrect={false} spellCheck={false}
+                style={[
+                  styles.input,
+                  activeField === "district" && styles.inputActive,
+                ]}
+                placeholder="District"
+                placeholderTextColor={COLORS.textSub}
+                value={formData.district}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, district: text })
+                }
+                onFocus={() => setActiveField("district")}
+                onBlur={() => setActiveField(null)}
+              />
+            </View>
+
             {/* Password */}
             <View style={styles.inputContainer}>
-              <View style={styles.inputIcon}>
-                <Lock size={20} color={COLORS.textSub} />
-              </View>
-              <TextInput
+              <TextInput autoComplete='off' autoCorrect={false} spellCheck={false}
                 style={[
                   styles.input,
                   activeField === "password" && styles.inputActive,
-                  { paddingRight: 44 },
+                  { paddingRight: 56 },
                 ]}
                 placeholder="Password"
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={COLORS.textSub}
                 secureTextEntry={!showPassword}
                 value={formData.password}
                 onChangeText={(text) =>
@@ -252,6 +342,36 @@ export default function SignupScreen() {
               </TouchableOpacity>
             </View>
 
+            {/* Confirm Password */}
+            <View style={styles.inputContainer}>
+              <TextInput autoComplete='off' autoCorrect={false} spellCheck={false}
+                style={[
+                  styles.input,
+                  activeField === "confirmPassword" && styles.inputActive,
+                  { paddingRight: 56 },
+                ]}
+                placeholder="Confirm Password"
+                placeholderTextColor={COLORS.textSub}
+                secureTextEntry={!showConfirmPassword}
+                value={formData.confirmPassword}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, confirmPassword: text })
+                }
+                onFocus={() => setActiveField("confirmPassword")}
+                onBlur={() => setActiveField(null)}
+              />
+              <TouchableOpacity
+                style={styles.eyeIcon}
+                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showConfirmPassword ? (
+                  <EyeOff size={20} color={COLORS.textSub} />
+                ) : (
+                  <Eye size={20} color={COLORS.textSub} />
+                )}
+              </TouchableOpacity>
+            </View>
+
             {/* Terms Checkbox */}
             <View style={styles.termsContainer}>
               <TouchableOpacity
@@ -265,41 +385,67 @@ export default function SignupScreen() {
               </TouchableOpacity>
               <Text style={styles.termsText}>
                 I agree to the{" "}
-                <Text style={styles.linkText}>Terms & Conditions</Text> and{" "}
-                <Text style={styles.linkText}>Privacy Policy</Text>.
+                <Animated.View
+                  style={{
+                    transform: [{ scale: termsScale }],
+                    marginBottom: -4,
+                  }}
+                >
+                  <Text
+                    style={styles.linkText}
+                    onPressIn={() => animateValue(termsScale, 0.95)}
+                    onPressOut={() => animateValue(termsScale, 1)}
+                  >
+                    Terms & Conditions
+                  </Text>
+                </Animated.View>{" "}
+                and <Text style={styles.linkText}>Privacy Policy</Text>.
               </Text>
             </View>
 
-            <TouchableOpacity
-              style={styles.buttonWrapper}
-              activeOpacity={0.9}
-              onPress={handleSignup}
-              disabled={loading}
+            <Animated.View
+              style={[
+                styles.buttonWrapper,
+                { transform: [{ scale: buttonScale }] },
+              ]}
             >
-              <LinearGradient
-                colors={["#13ec5b", "#0c8a35"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={[styles.button, loading && { opacity: 0.7 }]}
+              <Pressable
+                onPress={handleSignup}
+                onPressIn={() => animateValue(buttonScale, 0.96)}
+                onPressOut={() => animateValue(buttonScale, 1)}
+                disabled={loading}
               >
-                <Text style={styles.buttonText}>
-                  {loading ? "Creating Account..." : "Create Account"}
-                </Text>
-                {!loading && <ArrowRight size={20} color="white" />}
-              </LinearGradient>
-            </TouchableOpacity>
+                <LinearGradient
+                  colors={["#13ec5b", "#0c8a35"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={[styles.button, loading && { opacity: 0.7 }]}
+                >
+                  <Text style={styles.buttonText}>
+                    {loading ? "Creating Account..." : "Create Account"}
+                  </Text>
+                  {!loading && <ArrowRight size={20} color="white" />}
+                </LinearGradient>
+              </Pressable>
+            </Animated.View>
           </View>
 
           {/* Footer */}
           <View style={styles.footer}>
             <Text style={styles.footerText}>
               Already have an account?{" "}
-              <Text
-                style={styles.linkText}
-                onPress={() => router.push("/login")}
+              <Animated.View
+                style={{ transform: [{ scale: loginScale }], marginBottom: -4 }}
               >
-                Log In
-              </Text>
+                <Text
+                  style={styles.linkText}
+                  onPress={() => router.push("/login")}
+                  onPressIn={() => animateValue(loginScale, 0.95)}
+                  onPressOut={() => animateValue(loginScale, 1)}
+                >
+                  Log In
+                </Text>
+              </Animated.View>
             </Text>
           </View>
         </View>
@@ -311,13 +457,20 @@ export default function SignupScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.backgroundLight,
+    backgroundColor: COLORS.background,
   },
   scrollContent: {
     paddingHorizontal: 24,
     paddingTop: 32,
     paddingBottom: 40,
     alignItems: "center",
+  },
+  backButton: {
+    alignSelf: "flex-start",
+    marginBottom: 10,
+    padding: 8,
+    borderRadius: 12,
+    backgroundColor: COLORS.surface,
   },
   header: {
     alignItems: "center",
@@ -361,31 +514,29 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   inputContainer: {
-    position: "relative",
+    flexDirection: "row",
+    alignItems: "center",
     height: 48,
-  },
-  inputIcon: {
-    position: "absolute",
-    left: 16,
-    top: 0,
-    bottom: 0,
-    justifyContent: "center",
-    zIndex: 1,
-  },
-  input: {
-    flex: 1,
-    backgroundColor: COLORS.surfaceLight,
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
     borderColor: COLORS.border,
     borderRadius: 12,
-    paddingLeft: 44, // 16 (icon left) + 20 (icon size) + 8 (spacing)
+    position: "relative",
+  },
+  input: {
+    flex: 1,
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 12,
+    paddingLeft: 16,
     paddingRight: 16,
     fontSize: 15,
     color: COLORS.textMain,
   },
   inputActive: {
     borderColor: COLORS.primary,
-    backgroundColor: "#fff", // Optional: slightly brighten on focus
+    backgroundColor: COLORS.surface, // Optional: slightly brighten on focus
     // Ring effect simulated with border
   },
   eyeIcon: {
@@ -403,7 +554,7 @@ const styles = StyleSheet.create({
   },
   countryCodeContainer: {
     width: 88,
-    backgroundColor: COLORS.surfaceLight,
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
     borderColor: COLORS.border,
     borderRadius: 12,
@@ -423,7 +574,7 @@ const styles = StyleSheet.create({
   },
   phoneInputWrapper: {
     flex: 1,
-    backgroundColor: COLORS.surfaceLight,
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
     borderColor: COLORS.border,
     borderRadius: 12,
@@ -447,11 +598,11 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: "#d1d5db",
+    borderColor: COLORS.border,
     alignItems: "center",
     justifyContent: "center",
     marginTop: 2,
-    backgroundColor: "white",
+    backgroundColor: COLORS.surface,
   },
   checkboxChecked: {
     backgroundColor: COLORS.primary,

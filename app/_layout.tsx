@@ -1,58 +1,98 @@
 import {
   DarkTheme,
   DefaultTheme,
-  ThemeProvider,
+  ThemeProvider as NavThemeProvider,
 } from "@react-navigation/native";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { StatusBar } from "expo-status-bar";
+
 import { useEffect } from "react";
 import "react-native-reanimated";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { RequestProvider } from "../contexts/RequestContext";
+import { ThemeProvider, useTheme } from "../contexts/ThemeContext";
 import { SessionProvider } from "../ctx";
+
+import { useSession } from "../ctx";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  return (
+    <SafeAreaProvider>
+      <SessionProvider>
+        <ThemeProvider>
+          <RequestProvider>
+            <ThemeProviderBridge />
+          </RequestProvider>
+        </ThemeProvider>
+      </SessionProvider>
+    </SafeAreaProvider>
+  );
+}
+
+function ThemeProviderBridge() {
+  const { theme } = useTheme();
+  return (
+    <NavThemeProvider value={theme === "dark" ? DarkTheme : DefaultTheme}>
+      <RootLayoutNav />
+    </NavThemeProvider>
+  );
+}
+
+function RootLayoutNav() {
+  const { isLoading } = useSession();
 
   useEffect(() => {
-    // Hide splash screen immediately since we have no heavy assets to load right now
-    // In a real app, you might check for auth state or api calls here
-    setTimeout(SplashScreen.hideAsync, 1000);
-  }, []);
+    if (!isLoading) {
+      // Hide splash screen once auth state is determined
+      SplashScreen.hideAsync();
+    }
+  }, [isLoading]);
 
   return (
-    <SessionProvider>
-      <RequestProvider>
-        <ThemeProvider
-          value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-        >
-          <Stack>
-            <Stack.Screen name="index" options={{ headerShown: false }} />
-            <Stack.Screen name="login" options={{ headerShown: false }} />
-            <Stack.Screen name="signup" options={{ headerShown: false }} />
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="request-location"
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="request-details"
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="review-request"
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen name="+not-found" />
-          </Stack>
-          <StatusBar style="auto" />
-        </ThemeProvider>
-      </RequestProvider>
-    </SessionProvider>
+    <Stack>
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="login" options={{ headerShown: false }} />
+      <Stack.Screen name="signup" options={{ headerShown: false }} />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="create-request" options={{ headerShown: false }} />
+      <Stack.Screen name="request-location" options={{ headerShown: false }} />
+      <Stack.Screen name="request-details" options={{ headerShown: false }} />
+      <Stack.Screen name="review-request" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="available-workers"
+        options={{ headerShown: true, title: "Select Professional" }}
+      />
+      <Stack.Screen
+        name="payment"
+        options={{ headerShown: true, title: "Payment" }}
+      />
+      <Stack.Screen
+        name="request-status"
+        options={{ headerShown: true, title: "Booking Status" }}
+      />
+      <Stack.Screen
+        name="rate-experience"
+        options={{ headerShown: true, title: "Rate Service" }}
+      />
+      <Stack.Screen
+        name="profile"
+        options={{ headerShown: true, title: "Profile" }}
+      />
+      <Stack.Screen
+        name="my-requests"
+        options={{ headerShown: true, title: "My Requests" }}
+      />
+      <Stack.Screen
+        name="chat"
+        options={{ headerShown: true, title: "Messages" }}
+      />
+      <Stack.Screen name="client-home" options={{ headerShown: false }} />
+      <Stack.Screen name="+not-found" />
+    </Stack>
   );
 }

@@ -11,7 +11,9 @@ import {
 import { doc, setDoc } from "firebase/firestore";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { db, auth as firebaseAuth } from "./utils/firebaseConfig"; // Rename import to avoid conflict
+import AsyncStorage from "@react-native-async-storage/async-storage";
 const auth = firebaseAuth as Auth; // Assert type if needed or just use it
+const USER_CACHE_KEY = "fixmate_user_session";
 
 type User = {
   _id: string;
@@ -29,6 +31,9 @@ type AuthContextType = {
     password: string,
     name: string,
     phoneNumber: string,
+    address: string,
+    city: string,
+    district: string,
   ) => Promise<void>;
   signOut: () => Promise<void>;
   user: User | null;
@@ -85,11 +90,29 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
+    // Load cached user session first for "instant" appearance
+    const loadCachedSession = async () => {
+      try {
+        const cachedUser = await AsyncStorage.getItem(USER_CACHE_KEY);
+        if (cachedUser) {
+          setUser(JSON.parse(cachedUser));
+        }
+      } catch (error) {
+        console.error("Failed to load cached session", error);
+      }
+    };
+
+    loadCachedSession();
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        setUser(mapUser(firebaseUser));
+        const mappedUser = mapUser(firebaseUser);
+        setUser(mappedUser);
+        // Persist to cache
+        await AsyncStorage.setItem(USER_CACHE_KEY, JSON.stringify(mappedUser));
       } else {
         setUser(null);
+        await AsyncStorage.removeItem(USER_CACHE_KEY);
       }
       setIsLoading(false);
     });
@@ -113,6 +136,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     password: string,
     name: string,
     phoneNumber: string,
+    address: string,
+    city: string,
+    district: string,
   ) => {
     try {
       const userCredential = await createUserWithEmailAndPassword(
@@ -132,12 +158,16 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           email: email,
           displayName: name,
           phoneNumber: phoneNumber,
+          address: address,
+          city: city,
+          district: district,
           role: "customer", // Enforce role
           createdAt: new Date(),
         });
 
-        // Force update local state
-        setUser(mapUser({ ...userCredential.user, displayName: name } as any));
+        // Sign out immediately so the user has to login manually
+        await firebaseSignOut(auth);
+        setUser(null);
       }
     } catch (error: any) {
       console.error("Sign up error", error.message);

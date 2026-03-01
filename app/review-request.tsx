@@ -1,8 +1,14 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import {
-  ArrowLeft,
+  addDoc,
+  collection,
+  serverTimestamp,
+  doc,
+  getDoc,
+} from "firebase/firestore";
+import {
+  AlertCircle,
   Calendar,
   Check,
   CheckCircle,
@@ -17,28 +23,27 @@ import {
 import React, { useState } from "react";
 import {
   Alert,
-  Platform,
+  Modal,
   ScrollView,
-  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { BottomNavbar } from "../components/BottomNavbar";
 import { useRequest } from "../contexts/RequestContext";
 import { useSession } from "../ctx";
 import { db } from "../utils/firebaseConfig";
 
 const COLORS = {
-  primary: "#118A7E",
-  primaryDark: "#0e7066",
-  backgroundLight: "#F8FAFC",
-  surfaceLight: "#FFFFFF",
-  textLight: "#1e293b",
-  textGray: "#64748b",
-  borderLight: "#e2e8f0",
-  secondary: "#0E7490",
+  primary: "#10B981",
+  primaryDark: "#059669",
+  background: "#020617",
+  surface: "#0f172a",
+  border: "#1e293b",
+  textMain: "#f8fafc",
+  textSub: "#94a3b8",
 };
 
 export default function ReviewRequestScreen() {
@@ -48,6 +53,27 @@ export default function ReviewRequestScreen() {
 
   const [isAgreed, setIsAgreed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<
+    "cash" | "instant" | "saved_card"
+  >("cash");
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [savedCard, setSavedCard] = useState<any>(null);
+
+  React.useEffect(() => {
+    async function fetchCard() {
+      if (!user?._id) return;
+      try {
+        const docRef = doc(db, "users", user._id);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists() && docSnap.data().savedCard) {
+          setSavedCard(docSnap.data().savedCard);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    fetchCard();
+  }, [user?._id]);
 
   const handleSubmit = async () => {
     if (!isAgreed) {
@@ -58,26 +84,50 @@ export default function ReviewRequestScreen() {
       return;
     }
 
+    if (paymentMethod === "instant" && !requestData.budget) {
+      Alert.alert(
+        "Payment Error",
+        "Instant payment requires a pre-determined budget. Please select Cash on Delivery or wait for a quote.",
+      );
+      return;
+    }
+
     setSubmitting(true);
     try {
       // Save to Firestore
-      await addDoc(collection(db, "requests"), {
+      const docRef = await addDoc(collection(db, "requests"), {
         ...requestData,
         userId: user?._id || "guest",
-        status: "pending",
+        paymentMethod,
+        status:
+          paymentMethod === "instant"
+            ? "awaiting_payment"
+            : paymentMethod === "saved_card"
+              ? "paid"
+              : "pending",
         createdAt: serverTimestamp(),
       });
 
-      // Reset and Navigate (ideally to a success screen or home)
-      Alert.alert("Success", "Your request has been submitted successfully!", [
-        {
-          text: "OK",
-          onPress: () => {
-            setRequestData({}); // Clear
-            router.push("/client-home");
+      const requestId = docRef.id;
+
+      if (paymentMethod === "instant") {
+        // Redirect to PayHere payment screen
+        router.push({
+          pathname: "/payment",
+          params: {
+            id: requestId,
+            amount: requestData.budget,
+            serviceType: requestData.serviceType,
           },
-        },
-      ]);
+        });
+        // Remove clearing state here, clear only on successful payment or home transition
+      } else {
+        // Navigate to Success Screen
+        router.push({
+          pathname: "/booking-success",
+          params: { id: requestId, method: paymentMethod },
+        });
+      }
     } catch (error: any) {
       Alert.alert("Submission Failed", error.message || "Please try again.");
     } finally {
@@ -86,24 +136,7 @@ export default function ReviewRequestScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor={COLORS.backgroundLight}
-      />
-
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <ArrowLeft size={24} color={COLORS.textLight} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Review Request</Text>
-        <View style={{ width: 40 }} />
-      </View>
-
+    <SafeAreaView style={styles.container} edges={["left", "right"]}>
       <View style={{ flex: 1 }}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -156,7 +189,7 @@ export default function ReviewRequestScreen() {
             <View style={styles.detailsRow}>
               <View style={styles.detailItem}>
                 <View style={styles.detailLabelRow}>
-                  <MapPin size={14} color="#94a3b8" />
+                  <MapPin size={14} color={COLORS.textSub} />
                   <Text style={styles.detailLabel}>Location</Text>
                 </View>
                 <Text style={styles.detailValue} numberOfLines={2}>
@@ -168,7 +201,7 @@ export default function ReviewRequestScreen() {
             <View style={styles.detailsRow}>
               <View style={styles.detailItem}>
                 <View style={styles.detailLabelRow}>
-                  <Calendar size={14} color="#94a3b8" />
+                  <Calendar size={14} color={COLORS.textSub} />
                   <Text style={styles.detailLabel}>Date</Text>
                 </View>
                 <Text style={styles.detailValue}>
@@ -177,7 +210,7 @@ export default function ReviewRequestScreen() {
               </View>
               <View style={styles.detailItem}>
                 <View style={styles.detailLabelRow}>
-                  <Clock size={14} color="#94a3b8" />
+                  <Clock size={14} color={COLORS.textSub} />
                   <Text style={styles.detailLabel}>Time</Text>
                 </View>
                 <Text style={styles.detailValue}>
@@ -188,22 +221,183 @@ export default function ReviewRequestScreen() {
 
             <View style={styles.divider} />
 
-            {/* Payment Method Preview */}
-            <View style={styles.paymentRow}>
-              <View style={styles.paymentLeft}>
-                <CreditCard size={16} color="#475569" />
-                <Text style={styles.paymentText}>Payment Method</Text>
-              </View>
-              <View style={styles.paymentRight}>
-                <Text style={styles.cashText}>Cash on Delivery</Text>
-                <ChevronDown size={14} color="#94a3b8" />
+            <View style={styles.detailsRow}>
+              <View style={styles.detailItem}>
+                <View style={styles.detailLabelRow}>
+                  <FileText size={14} color={COLORS.textSub} />
+                  <Text style={styles.detailLabel}>Issue Description</Text>
+                </View>
+                <Text style={styles.detailValue} numberOfLines={3}>
+                  {requestData.description}
+                </Text>
               </View>
             </View>
 
-            {/* Total Estimation (Mock) */}
+            <View style={styles.detailsRow}>
+              <View style={styles.detailItem}>
+                <View style={styles.detailLabelRow}>
+                  <AlertCircle size={14} color={COLORS.textSub} />
+                  <Text style={styles.detailLabel}>Urgency</Text>
+                </View>
+                <Text
+                  style={[styles.detailValue, { textTransform: "capitalize" }]}
+                >
+                  {requestData.urgency || "Normal"}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.divider} />
+
+            {/* Payment Method Selection */}
+            <TouchableOpacity
+              style={styles.paymentRow}
+              onPress={() => setShowPaymentModal(true)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.paymentLeft}>
+                <CreditCard size={16} color={COLORS.textSub} />
+                <Text style={styles.paymentText}>Payment Method</Text>
+              </View>
+              <View style={styles.paymentRight}>
+                <Text style={styles.cashText}>
+                  {paymentMethod === "cash"
+                    ? "Cash on Delivery"
+                    : paymentMethod === "saved_card"
+                      ? `•••• ${savedCard?.last4}`
+                      : "Pay Instantly"}
+                </Text>
+                <ChevronDown size={14} color={COLORS.textSub} />
+              </View>
+            </TouchableOpacity>
+
+            {/* Payment Method Modal */}
+            <Modal
+              visible={showPaymentModal}
+              transparent={true}
+              animationType="slide"
+              onRequestClose={() => setShowPaymentModal(false)}
+            >
+              <TouchableOpacity
+                style={styles.modalOverlay}
+                activeOpacity={1}
+                onPress={() => setShowPaymentModal(false)}
+              >
+                <View style={styles.modalContent}>
+                  <View style={styles.modalHeader}>
+                    <Text style={styles.modalTitle}>Select Payment Method</Text>
+                    <TouchableOpacity
+                      onPress={() => setShowPaymentModal(false)}
+                    >
+                      <ChevronDown size={24} color={COLORS.textSub} />
+                    </TouchableOpacity>
+                  </View>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.methodItem,
+                      paymentMethod === "cash" && styles.methodItemSelected,
+                    ]}
+                    onPress={() => {
+                      setPaymentMethod("cash");
+                      setShowPaymentModal(false);
+                    }}
+                  >
+                    <View style={styles.methodIconBg}>
+                      <MapPin size={20} color={COLORS.primary} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.methodName}>Cash on Delivery</Text>
+                      <Text style={styles.methodSub}>
+                        Pay after service completion
+                      </Text>
+                    </View>
+                    {paymentMethod === "cash" && (
+                      <CheckCircle size={20} color={COLORS.primary} />
+                    )}
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.methodItem,
+                      paymentMethod === "instant" && styles.methodItemSelected,
+                    ]}
+                    onPress={() => {
+                      if (!requestData.budget) {
+                        Alert.alert(
+                          "Estimation Required",
+                          "Please provide a budget to use instant payment.",
+                        );
+                        return;
+                      }
+                      setPaymentMethod("instant");
+                      setShowPaymentModal(false);
+                    }}
+                  >
+                    <View
+                      style={[
+                        styles.methodIconBg,
+                        { backgroundColor: "#eff6ff" },
+                      ]}
+                    >
+                      <CreditCard size={20} color="#3b82f6" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.methodName}>
+                        Pay Instantly (PayHere)
+                      </Text>
+                      <Text style={styles.methodSub}>
+                        Secure online payment via PayHere
+                      </Text>
+                    </View>
+                    {paymentMethod === "instant" && (
+                      <CheckCircle size={20} color={COLORS.primary} />
+                    )}
+                  </TouchableOpacity>
+
+                  {savedCard && (
+                    <TouchableOpacity
+                      style={[
+                        styles.methodItem,
+                        paymentMethod === "saved_card" &&
+                          styles.methodItemSelected,
+                      ]}
+                      onPress={() => {
+                        setPaymentMethod("saved_card");
+                        setShowPaymentModal(false);
+                      }}
+                    >
+                      <View
+                        style={[
+                          styles.methodIconBg,
+                          { backgroundColor: "#fdf4ff" },
+                        ]}
+                      >
+                        <CreditCard size={20} color="#c026d3" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.methodName}>
+                          {savedCard.brand} ending in {savedCard.last4}
+                        </Text>
+                        <Text style={styles.methodSub}>Saved card payment</Text>
+                      </View>
+                      {paymentMethod === "saved_card" && (
+                        <CheckCircle size={20} color={COLORS.primary} />
+                      )}
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </TouchableOpacity>
+            </Modal>
+
+            {/* Total Estimation */}
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Estimated Total</Text>
-              <Text style={styles.totalValue}>Pending Quote</Text>
+              <Text style={styles.totalLabel}>Estimated Budget</Text>
+              <Text style={styles.totalValue}>
+                {requestData.budget
+                  ? `LKR ${requestData.budget}`
+                  : "Pending Quote"}
+              </Text>
             </View>
             <Text style={styles.disclaimerText}>
               Final price will be determined after on-site inspection.
@@ -244,50 +438,57 @@ export default function ReviewRequestScreen() {
               safety.
             </Text>
           </View>
+          <View style={styles.continueButtonContainer}>
+            <TouchableOpacity
+              style={styles.submitBtnWrapper}
+              activeOpacity={0.9}
+              onPress={handleSubmit}
+              disabled={submitting}
+            >
+              <LinearGradient
+                colors={
+                  isAgreed
+                    ? [COLORS.primary, COLORS.primaryDark]
+                    : ["#cbd5e1", "#94a3b8"]
+                }
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.submitBtn}
+              >
+                {submitting ? (
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 8,
+                    }}
+                  >
+                    <Loader2
+                      size={20}
+                      color="white"
+                      style={{ transform: [{ rotate: "45deg" }] }}
+                    />
+                    <Text style={styles.submitBtnText}>Submitting...</Text>
+                  </View>
+                ) : (
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 8,
+                    }}
+                  >
+                    <CheckCircle size={20} color="white" />
+                    <Text style={styles.submitBtnText}>CONFIRM BOOKING</Text>
+                  </View>
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
         </ScrollView>
       </View>
 
-      {/* Footer Bar */}
-      <View style={styles.bottomBar}>
-        <TouchableOpacity
-          style={styles.submitBtnWrapper}
-          activeOpacity={0.9}
-          onPress={handleSubmit}
-          disabled={submitting}
-        >
-          <LinearGradient
-            colors={
-              isAgreed
-                ? [COLORS.primary, COLORS.primaryDark]
-                : ["#cbd5e1", "#94a3b8"]
-            }
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.submitBtn}
-          >
-            {submitting ? (
-              <View
-                style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
-              >
-                <Loader2
-                  size={20}
-                  color="white"
-                  style={{ transform: [{ rotate: "45deg" }] }}
-                />
-                {/* Note: Loader2 needs animation, simple rotate for now or just static icon indicating loading if no animation lib */}
-                <Text style={styles.submitBtnText}>Submitting...</Text>
-              </View>
-            ) : (
-              <View
-                style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
-              >
-                <CheckCircle size={20} color="white" />
-                <Text style={styles.submitBtnText}>CONFIRM BOOKING</Text>
-              </View>
-            )}
-          </LinearGradient>
-        </TouchableOpacity>
-      </View>
+      <BottomNavbar />
     </SafeAreaView>
   );
 }
@@ -295,7 +496,7 @@ export default function ReviewRequestScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.backgroundLight,
+    backgroundColor: COLORS.background,
   },
   scrollContent: {
     paddingHorizontal: 24,
@@ -311,12 +512,12 @@ const styles = StyleSheet.create({
   backButton: {
     padding: 8,
     borderRadius: 20,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: COLORS.surface,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#0f172a",
+    color: COLORS.textMain,
   },
   stepCardContainer: {
     marginBottom: 24,
@@ -365,8 +566,8 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "rgba(255,255,255,0.9)",
     letterSpacing: 1,
-    marginBottom: 4,
     textTransform: "uppercase",
+    marginBottom: 4,
   },
   stepTitle: {
     fontSize: 20,
@@ -387,11 +588,11 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   receiptCard: {
-    backgroundColor: "white",
+    backgroundColor: COLORS.surface,
     borderRadius: 20,
     padding: 20,
     borderWidth: 1,
-    borderColor: COLORS.borderLight,
+    borderColor: COLORS.border,
     gap: 16,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
@@ -426,7 +627,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f1f5f9",
     borderStyle: "dashed",
     borderWidth: 1,
-    borderColor: "#f1f5f9", // simplified dashed line attempt
+    borderColor: "#f1f5f9",
   },
   detailsRow: {
     flexDirection: "row",
@@ -541,17 +742,13 @@ const styles = StyleSheet.create({
     color: "#0f766e",
     lineHeight: 18,
   },
+  continueButtonContainer: {
+    marginTop: 24,
+    marginBottom: 24,
+  },
   bottomBar: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: "rgba(255,255,255,0.95)",
-    borderTopWidth: 1,
-    borderTopColor: "#e2e8f0",
     paddingVertical: 16,
     paddingHorizontal: 24,
-    paddingBottom: Platform.OS === "ios" ? 34 : 24,
   },
   submitBtnWrapper: {
     shadowColor: COLORS.primary,
@@ -573,5 +770,59 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     letterSpacing: 1,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: "white",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    paddingBottom: 40,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#1e293b",
+  },
+  methodItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: "#f1f5f9",
+    marginBottom: 12,
+  },
+  methodItemSelected: {
+    borderColor: COLORS.primary,
+    backgroundColor: "#f0fdfa",
+  },
+  methodIconBg: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: "#ecfdf5",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  methodName: {
+    fontSize: 15,
+    fontWeight: "bold",
+    color: "#334155",
+  },
+  methodSub: {
+    fontSize: 12,
+    color: "#94a3b8",
   },
 });

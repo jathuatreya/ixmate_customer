@@ -5,9 +5,7 @@ import { doc, onSnapshot } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
   Image,
-  Platform,
   ScrollView,
-  StatusBar,
   StyleSheet,
   Switch,
   Text,
@@ -15,6 +13,8 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { BottomNavbar } from "../components/BottomNavbar";
+import { useTheme, getColors } from "../contexts/ThemeContext";
 import { useSession } from "../ctx";
 import { db } from "../utils/firebaseConfig";
 
@@ -35,8 +35,10 @@ const COLORS = {
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const { theme, mode, setMode } = useTheme();
+  const THEME_COLORS = getColors(theme);
+  const isDark = theme === "dark";
   const [pushEnabled, setPushEnabled] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
 
   const { user, signOut } = useSession();
   const [userData, setUserData] = useState<any>(null);
@@ -57,24 +59,15 @@ export default function ProfileScreen() {
   const renderHeader = () => (
     <View style={styles.headerContainer}>
       <LinearGradient
-        colors={["#059669", "#10b981", "#2563eb"]}
+        colors={isDark ? ["#0f172a", "#1e293b"] : ["#059669", "#10b981"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.headerGradient}
       >
         {/* Top Buttons */}
-        <SafeAreaView edges={["top"]} style={styles.topBar}>
-          <TouchableOpacity
-            style={styles.iconBtn}
-            onPress={() => router.back()}
-          >
-            <MaterialIcons name="arrow-back" size={22} color="white" />
-          </TouchableOpacity>
-          <Text style={styles.pageTitle}>Profile</Text>
-          <TouchableOpacity style={styles.iconBtn}>
-            <MaterialIcons name="settings" size={22} color="white" />
-          </TouchableOpacity>
-        </SafeAreaView>
+        <View style={styles.topBar}>
+          <View style={{ height: 10 }} />
+        </View>
 
         {/* Avatar & Info */}
         <View style={styles.profileInfo}>
@@ -92,7 +85,7 @@ export default function ProfileScreen() {
             </View>
           </View>
 
-          <Text style={styles.userName}>
+          <Text style={[styles.userName, { color: "white" }]}>
             {userData?.displayName || "Loading..."}
           </Text>
 
@@ -114,26 +107,15 @@ export default function ProfileScreen() {
       </LinearGradient>
 
       {/* Stats Card Overlay */}
-      <View style={styles.statsCard}>
+      <View
+        style={[styles.statsCard, { backgroundColor: THEME_COLORS.surface }]}
+      >
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>0</Text>
+          <Text style={[styles.statValue, { color: THEME_COLORS.textMain }]}>
+            0
+          </Text>
           <Text style={[styles.statLabel, { color: COLORS.primary }]}>
-            JOBS
-          </Text>
-        </View>
-        <View style={[styles.statItem, styles.statBorder]}>
-          <Text style={styles.statValue}>0</Text>
-          <Text style={[styles.statLabel, { color: COLORS.secondary }]}>
-            REVIEWS
-          </Text>
-        </View>
-        <View style={styles.statItem}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
-            <Text style={styles.statValue}>--</Text>
-            <MaterialIcons name="star" size={20} color="#eab308" />
-          </View>
-          <Text style={[styles.statLabel, { color: COLORS.accent }]}>
-            RATING
+            JOBS COMPLETED
           </Text>
         </View>
       </View>
@@ -169,26 +151,33 @@ export default function ProfileScreen() {
         <MaterialIcons name={icon} size={24} color={color} />
       </View>
       <View style={styles.menuContent}>
-        <Text style={styles.menuTitle}>{title}</Text>
-        {subtitle && <Text style={styles.menuSubtitle}>{subtitle}</Text>}
+        <Text style={[styles.menuTitle, { color: THEME_COLORS.textMain }]}>
+          {title}
+        </Text>
+        {subtitle && (
+          <Text style={[styles.menuSubtitle, { color: THEME_COLORS.textSub }]}>
+            {subtitle}
+          </Text>
+        )}
       </View>
 
       {rightElement
         ? rightElement
         : showArrow && (
-            <MaterialIcons name="chevron-right" size={24} color="#cbd5e1" />
+            <MaterialIcons
+              name="chevron-right"
+              size={24}
+              color={THEME_COLORS.border}
+            />
           )}
     </TouchableOpacity>
   );
 
   return (
-    <View style={styles.container}>
-      <StatusBar
-        barStyle="light-content"
-        translucent
-        backgroundColor="transparent"
-      />
-
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: THEME_COLORS.background }]}
+      edges={["left", "right"]}
+    >
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
@@ -199,20 +188,24 @@ export default function ProfileScreen() {
 
         {/* Account Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionHeader}>ACCOUNT</Text>
-          <View style={styles.card}>
+          <Text style={[styles.sectionHeader, { color: THEME_COLORS.textSub }]}>
+            ACCOUNT
+          </Text>
+          <View
+            style={[
+              styles.card,
+              {
+                backgroundColor: THEME_COLORS.surface,
+                borderColor: THEME_COLORS.border,
+              },
+            ]}
+          >
             <MenuItem
               icon="person"
               title="Edit Profile"
               subtitle="Update details & photo"
               color="#10b981"
-            />
-            <View style={styles.divider} />
-            <MenuItem
-              icon="map"
-              title="Saved Addresses"
-              subtitle="Home, Office locations"
-              color="#3b82f6"
+              onPress={() => router.push("/edit-profile")}
             />
             <View style={styles.divider} />
             <MenuItem
@@ -266,20 +259,6 @@ export default function ProfileScreen() {
                 />
               }
             />
-            <View style={styles.divider} />
-            <MenuItem
-              icon="dark-mode"
-              title="Dark Mode"
-              color="#475569"
-              rightElement={
-                <Switch
-                  value={darkMode}
-                  onValueChange={setDarkMode}
-                  trackColor={{ false: "#e2e8f0", true: "#475569" }}
-                  thumbColor="white"
-                />
-              }
-            />
           </View>
         </View>
 
@@ -297,60 +276,14 @@ export default function ProfileScreen() {
         </View>
       </ScrollView>
 
-      {/* Bottom Nav */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => router.push("/client-home")}
-        >
-          <MaterialIcons name="home" size={26} color={COLORS.textSub} />
-          <Text style={styles.navLabel}>Home</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => router.push("/my-requests")}
-        >
-          <MaterialIcons
-            name="calendar-today"
-            size={26}
-            color={COLORS.textSub}
-          />
-          <Text style={styles.navLabel}>Bookings</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => router.push("/chat")}
-        >
-          <MaterialIcons
-            name="chat-bubble-outline"
-            size={26}
-            color={COLORS.textSub}
-          />
-          <Text style={styles.navLabel}>Inbox</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <View>
-            <MaterialIcons name="person" size={26} color={COLORS.primary} />
-            <View style={styles.navDot} />
-          </View>
-          <Text
-            style={[
-              styles.navLabel,
-              { color: COLORS.primary, fontWeight: "bold" },
-            ]}
-          >
-            Profile
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+      <BottomNavbar />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.backgroundLight,
   },
   scrollContent: {
     paddingBottom: 100,
@@ -570,44 +503,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: COLORS.textSub,
     opacity: 0.5,
-  },
-  bottomNav: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    paddingBottom: Platform.OS === "ios" ? 24 : 12,
-    backgroundColor: "white",
-    borderTopWidth: 1,
-    borderTopColor: COLORS.borderLight,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.02,
-    shadowRadius: 4,
-    elevation: 10,
-  },
-  navItem: {
-    alignItems: "center",
-    gap: 4,
-  },
-  navDot: {
-    position: "absolute",
-    top: -2,
-    right: -2,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: COLORS.primary,
-    borderWidth: 1.5,
-    borderColor: "white",
-  },
-  navLabel: {
-    fontSize: 10,
-    fontWeight: "500",
-    color: COLORS.textSub,
   },
 });

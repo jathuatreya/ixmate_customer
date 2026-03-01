@@ -1,24 +1,19 @@
 import { LinearGradient } from "expo-linear-gradient";
-import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import {
-  ArrowLeft,
   ArrowRight,
   Calendar,
   CheckCircle,
   ChevronDown,
   Clock,
   MapPin,
-  Navigation,
   Search,
 } from "lucide-react-native";
 import React, { useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Platform,
   ScrollView,
-  StatusBar,
   StyleSheet,
   Switch,
   Text,
@@ -27,17 +22,17 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { BottomNavbar } from "../components/BottomNavbar";
 import { useRequest } from "../contexts/RequestContext";
 
 const COLORS = {
-  primary: "#118A7E",
-  primaryDark: "#0e7066",
-  backgroundLight: "#F8FAFC",
-  surfaceLight: "#FFFFFF",
-  textLight: "#1e293b",
-  textGray: "#64748b",
-  borderLight: "#e2e8f0",
-  secondary: "#0E7490",
+  primary: "#10B981",
+  primaryDark: "#059669",
+  background: "#020617",
+  surface: "#0f172a",
+  textMain: "#f8fafc",
+  textSub: "#94a3b8",
+  border: "#1e293b",
 };
 
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -51,10 +46,28 @@ export default function RequestLocationScreen() {
   const [address, setAddress] = useState(requestData.address || "");
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [isDateSelected, setIsDateSelected] = useState(
+    !!requestData.scheduledDate,
+  );
+
   const [time, setTime] = useState(new Date());
   const [showTimePicker, setShowTimePicker] = useState(false);
-  const [isFlexible, setIsFlexible] = useState(true);
-  const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState("");
+  const [customTime, setCustomTime] = useState(requestData.scheduledTime || "");
+  const [isTimeSelected, setIsTimeSelected] = useState(
+    !!requestData.scheduledTime,
+  );
+
+  const [isFlexible, setIsFlexible] = useState(requestData.isFlexible || false);
+
+  const timeSuggestions = [
+    "08:00 AM",
+    "10:00 AM",
+    "12:00 PM",
+    "02:00 PM",
+    "04:00 PM",
+    "06:00 PM",
+  ];
 
   const handleNext = () => {
     if (!address.trim()) {
@@ -64,81 +77,40 @@ export default function RequestLocationScreen() {
       );
       return;
     }
+    if (!isDateSelected) {
+      Alert.alert("Missing Date", "Please select a date for the service.");
+      return;
+    }
+    const finalTime = customTime.trim();
+
+    if (!finalTime) {
+      Alert.alert(
+        "Missing Time",
+        "Please type or select a time for the service.",
+      );
+      return;
+    }
+
     setRequestData({
       ...requestData,
       address,
       scheduledDate: date.toDateString(),
-      scheduledTime: time.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
+      scheduledTime: finalTime,
+      isFlexible,
     });
-    router.push("/review-request");
-  };
-
-  const handleUseCurrentLocation = async () => {
-    setIsGettingLocation(true);
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert("Permission to access location was denied");
-        setIsGettingLocation(false);
-        return;
-      }
-
-      const location = await Location.getCurrentPositionAsync({});
-      const addressResponse = await Location.reverseGeocodeAsync({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-      });
-
-      if (addressResponse.length > 0) {
-        const addr = addressResponse[0];
-        const formattedAddress = `${addr.street || ""} ${addr.name || ""}, ${addr.city || ""}, ${addr.region || ""}`;
-        setAddress(formattedAddress.trim().replace(/^,/, "").trim());
-      } else {
-        Alert.alert("Could not determine address from location");
-      }
-    } catch (error: any) {
-      Alert.alert("Error getting location", error?.message || "Unknown error");
-    } finally {
-      setIsGettingLocation(false);
-    }
+    router.push("/available-workers");
   };
 
   const onDateChange = (event: any, selectedDate?: Date) => {
     setShowDatePicker(false);
     if (selectedDate) {
       setDate(selectedDate);
-    }
-  };
-
-  const onTimeChange = (event: any, selectedTime?: Date) => {
-    setShowTimePicker(false);
-    if (selectedTime) {
-      setTime(selectedTime);
+      setIsDateSelected(true);
     }
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor={COLORS.backgroundLight}
-      />
-
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <ArrowLeft size={24} color={COLORS.textLight} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Location & Time</Text>
-        <View style={{ width: 40 }} />
-      </View>
-
+    <SafeAreaView style={styles.container} edges={["left", "right"]}>
       <View style={{ flex: 1 }}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -179,37 +151,17 @@ export default function RequestLocationScreen() {
           </View>
 
           <View style={styles.locationCard}>
-            <View style={styles.mapPreview}>
-              <MapPin size={32} color={COLORS.primary} />
-              <Text style={styles.mapText}>Map Preview</Text>
-            </View>
-
             <View style={styles.locationInputContainer}>
               <View style={styles.inputWrapper}>
-                <Search size={20} color="#94a3b8" style={{ marginLeft: 12 }} />
-                <TextInput
+                <MapPin size={20} color="#94a3b8" style={{ marginLeft: 12 }} />
+                <TextInput autoComplete='off' autoCorrect={false} spellCheck={false}
                   style={styles.input}
-                  placeholder="Enter address or landmark"
+                  placeholder="Enter shop address or landmark"
                   placeholderTextColor="#94a3b8"
                   value={address}
                   onChangeText={setAddress}
                 />
               </View>
-              <TouchableOpacity
-                style={styles.currentLocationBtn}
-                onPress={handleUseCurrentLocation}
-              >
-                {isGettingLocation ? (
-                  <ActivityIndicator size="small" color={COLORS.primary} />
-                ) : (
-                  <>
-                    <Navigation size={18} color={COLORS.primary} />
-                    <Text style={styles.currentLocationText}>
-                      Use Current Location
-                    </Text>
-                  </>
-                )}
-              </TouchableOpacity>
             </View>
           </View>
 
@@ -228,27 +180,13 @@ export default function RequestLocationScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.pickerLabel}>Date</Text>
-                <Text style={styles.pickerValue}>{date.toDateString()}</Text>
-              </View>
-              <ChevronDown size={20} color="#cbd5e1" />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.pickerButton}
-              onPress={() => setShowTimePicker(true)}
-            >
-              <View
-                style={[styles.pickerIconBg, { backgroundColor: "#fff7ed" }]}
-              >
-                <Clock size={20} color="#f97316" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.pickerLabel}>Time</Text>
-                <Text style={styles.pickerValue}>
-                  {time.toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
+                <Text
+                  style={[
+                    styles.pickerValue,
+                    !isDateSelected && styles.placeholderValue,
+                  ]}
+                >
+                  {isDateSelected ? date.toDateString() : "Select Date"}
                 </Text>
               </View>
               <ChevronDown size={20} color="#cbd5e1" />
@@ -263,16 +201,61 @@ export default function RequestLocationScreen() {
                 minimumDate={new Date()}
               />
             )}
-
-            {showTimePicker && (
-              <DateTimePicker
-                value={time}
-                mode="time"
-                display={Platform.OS === "ios" ? "spinner" : "default"}
-                onChange={onTimeChange}
-              />
-            )}
           </View>
+
+          {/* Time Sections */}
+          <View style={[styles.sectionHeader, { marginTop: 32 }]}>
+            <Text style={styles.sectionTitle}>Preferred time</Text>
+            <Text style={styles.sectionSubtitle}>
+              Type or select a suggestion
+            </Text>
+          </View>
+
+          <View style={styles.timeInputContainer}>
+            <View style={styles.customInputWrapper}>
+              <Clock size={20} color={COLORS.primary} />
+              <TextInput autoComplete='off' autoCorrect={false} spellCheck={false}
+                style={styles.customInputLarge}
+                placeholder="e.g. 10:30 AM"
+                placeholderTextColor="#94a3b8"
+                value={customTime}
+                onChangeText={setCustomTime}
+              />
+            </View>
+          </View>
+
+          <View style={styles.suggestionsHeader}>
+            <Text style={styles.suggestionTitle}>Suggestions:</Text>
+          </View>
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.suggestionsScroll}
+            contentContainerStyle={styles.suggestionsContent}
+          >
+            {timeSuggestions.map((slot) => (
+              <TouchableOpacity
+                key={slot}
+                style={[
+                  styles.suggestionChip,
+                  customTime === slot && styles.suggestionChipSelected,
+                ]}
+                onPress={() => {
+                  setCustomTime(slot);
+                }}
+              >
+                <Text
+                  style={[
+                    styles.suggestionText,
+                    customTime === slot && styles.suggestionTextSelected,
+                  ]}
+                >
+                  {slot}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
 
           {/* Flexible Toggle */}
           <View style={styles.flexibleContainer}>
@@ -296,34 +279,34 @@ export default function RequestLocationScreen() {
               </View>
             </View>
             <Switch
-              trackColor={{ false: "#e2e8f0", true: COLORS.primary }}
+              trackColor={{ false: COLORS.border, true: COLORS.primary }}
               thumbColor={"white"}
-              ios_backgroundColor="#e2e8f0"
+              ios_backgroundColor={COLORS.border}
               onValueChange={setIsFlexible}
               value={isFlexible}
             />
           </View>
+          <View style={styles.continueButtonContainer}>
+            <TouchableOpacity
+              style={styles.nextButtonWrapper}
+              activeOpacity={0.9}
+              onPress={handleNext}
+            >
+              <LinearGradient
+                colors={[COLORS.primary, COLORS.primaryDark]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.nextButton}
+              >
+                <Text style={styles.nextButtonText}>REVIEW REQUEST</Text>
+                <ArrowRight size={20} color="white" />
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
         </ScrollView>
       </View>
 
-      {/* Footer Bar */}
-      <View style={styles.bottomBar}>
-        <TouchableOpacity
-          style={styles.nextButtonWrapper}
-          activeOpacity={0.9}
-          onPress={handleNext}
-        >
-          <LinearGradient
-            colors={[COLORS.primary, COLORS.primaryDark]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.nextButton}
-          >
-            <Text style={styles.nextButtonText}>REVIEW REQUEST</Text>
-            <ArrowRight size={20} color="white" />
-          </LinearGradient>
-        </TouchableOpacity>
-      </View>
+      <BottomNavbar />
     </SafeAreaView>
   );
 }
@@ -331,7 +314,7 @@ export default function RequestLocationScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.backgroundLight,
+    backgroundColor: COLORS.background,
   },
   scrollContent: {
     paddingHorizontal: 24,
@@ -401,8 +384,8 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "rgba(255,255,255,0.9)",
     letterSpacing: 1,
-    marginBottom: 4,
     textTransform: "uppercase",
+    marginBottom: 4,
   },
   stepTitle: {
     fontSize: 20,
@@ -428,14 +411,19 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#334155",
+    color: COLORS.textMain,
+  },
+  sectionSubtitle: {
+    fontSize: 13,
+    color: COLORS.textSub,
+    marginTop: 2,
   },
   locationCard: {
-    backgroundColor: "white",
+    backgroundColor: COLORS.surface,
     borderRadius: 20,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: COLORS.borderLight,
+    borderColor: COLORS.border,
     padding: 16,
     gap: 16,
   },
@@ -458,18 +446,18 @@ const styles = StyleSheet.create({
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: COLORS.backgroundLight,
+    backgroundColor: COLORS.background,
     borderRadius: 12,
     height: 48,
     borderWidth: 1,
-    borderColor: "#e2e8f0",
+    borderColor: COLORS.border,
   },
   input: {
     flex: 1,
     height: "100%",
     paddingHorizontal: 12,
     fontSize: 14,
-    color: COLORS.textLight,
+    color: COLORS.textMain,
   },
   currentLocationBtn: {
     flexDirection: "row",
@@ -487,14 +475,14 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   pickerButton: {
-    backgroundColor: "white",
+    backgroundColor: COLORS.surface,
     borderRadius: 16,
     padding: 16,
     flexDirection: "row",
     alignItems: "center",
     gap: 16,
     borderWidth: 1,
-    borderColor: COLORS.borderLight,
+    borderColor: COLORS.border,
   },
   pickerIconBg: {
     width: 40,
@@ -506,24 +494,28 @@ const styles = StyleSheet.create({
   },
   pickerLabel: {
     fontSize: 12,
-    color: "#94a3b8",
+    color: COLORS.textSub,
     marginBottom: 2,
   },
   pickerValue: {
     fontSize: 15,
     fontWeight: "600",
-    color: COLORS.textLight,
+    color: COLORS.textMain,
+  },
+  placeholderValue: {
+    color: COLORS.textSub,
+    fontWeight: "400",
   },
   flexibleContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "white",
+    backgroundColor: COLORS.surface,
     padding: 16,
     borderRadius: 16,
     marginTop: 24,
     borderWidth: 1,
-    borderColor: COLORS.borderLight,
+    borderColor: COLORS.border,
   },
   flexibleLeft: {
     flexDirection: "row",
@@ -534,30 +526,26 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "#f1f5f9",
+    backgroundColor: COLORS.background,
     alignItems: "center",
     justifyContent: "center",
   },
   flexibleTitle: {
     fontSize: 14,
     fontWeight: "600",
-    color: COLORS.textLight,
+    color: COLORS.textMain,
   },
   flexibleSub: {
     fontSize: 12,
-    color: "#94a3b8",
+    color: COLORS.textSub,
+  },
+  continueButtonContainer: {
+    marginTop: 24,
+    marginBottom: 24,
   },
   bottomBar: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: "rgba(255,255,255,0.95)",
-    borderTopWidth: 1,
-    borderTopColor: "#e2e8f0",
     paddingVertical: 16,
     paddingHorizontal: 24,
-    paddingBottom: Platform.OS === "ios" ? 34 : 24,
   },
   nextButtonWrapper: {
     shadowColor: COLORS.primary,
@@ -579,5 +567,64 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     letterSpacing: 1,
+  },
+  customInputWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    backgroundColor: COLORS.surface,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    height: 56,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+  },
+  customInputLarge: {
+    flex: 1,
+    fontSize: 16,
+    color: COLORS.textMain,
+    fontWeight: "bold",
+    height: 50,
+  },
+  timeInputContainer: {
+    marginBottom: 16,
+  },
+  suggestionsHeader: {
+    marginBottom: 8,
+  },
+  suggestionTitle: {
+    fontSize: 12,
+    color: COLORS.textSub,
+    fontWeight: "600",
+  },
+  suggestionsScroll: {
+    flexGrow: 0,
+    marginBottom: 20,
+  },
+  suggestionsContent: {
+    gap: 8,
+    paddingRight: 20,
+  },
+  suggestionChip: {
+    backgroundColor: COLORS.surface,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    minWidth: 100,
+    alignItems: "center",
+  },
+  suggestionChipSelected: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  suggestionText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: COLORS.textSub,
+  },
+  suggestionTextSelected: {
+    color: "white",
   },
 });

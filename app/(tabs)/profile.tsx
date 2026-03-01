@@ -4,38 +4,41 @@ import { useRouter } from "expo-router";
 import { doc, onSnapshot } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
-    Image,
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Switch,
-    Text,
-    TouchableOpacity,
-    View
+  Image,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { BottomNavbar } from "../../components/BottomNavbar";
+import { useTheme, getColors } from "../../contexts/ThemeContext";
 import { useSession } from "../../ctx";
 import { db } from "../../utils/firebaseConfig";
 
 // Theme
 const COLORS = {
-  primary: "#10b981", // Emerald 500
-  primaryDark: "#059669", // Emerald 600
-  secondary: "#3b82f6", // Blue 500
-  accent: "#0ea5e9", // Sky 500
-  backgroundLight: "#f1f5f9", // Slate 100
-  surfaceLight: "#ffffff",
-  textMain: "#1e293b",
-  textSub: "#64748b",
+  primary: "#10b981",
+  primaryDark: "#059669",
+  secondary: "#3b82f6",
+  accent: "#0ea5e9",
+  background: "#020617",
+  surface: "#0f172a",
+  textMain: "#f8fafc",
+  textSub: "#94a3b8",
   white: "#FFFFFF",
   red500: "#ef4444",
-  borderLight: "#e2e8f0",
+  border: "#1e293b",
 };
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const { theme, mode, setMode } = useTheme();
+  const THEME_COLORS = getColors(theme);
+  const isDark = theme === "dark";
   const [pushEnabled, setPushEnabled] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
 
   const { user, signOut } = useSession();
   const [userData, setUserData] = useState<any>(null);
@@ -56,7 +59,9 @@ export default function ProfileScreen() {
   const renderHeader = () => (
     <View style={styles.headerContainer}>
       <LinearGradient
-        colors={["#059669", "#10b981", "#2563eb"]}
+        colors={
+          isDark ? ["#0f172a", "#1e293b"] : ["#059669", "#10b981", "#2563eb"]
+        }
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.headerGradient}
@@ -109,26 +114,15 @@ export default function ProfileScreen() {
       </LinearGradient>
 
       {/* Stats Card Overlay */}
-      <View style={styles.statsCard}>
+      <View
+        style={[styles.statsCard, { backgroundColor: THEME_COLORS.surface }]}
+      >
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>0</Text>
+          <Text style={[styles.statValue, { color: THEME_COLORS.textMain }]}>
+            0
+          </Text>
           <Text style={[styles.statLabel, { color: COLORS.primary }]}>
-            JOBS
-          </Text>
-        </View>
-        <View style={[styles.statItem, styles.statBorder]}>
-          <Text style={styles.statValue}>0</Text>
-          <Text style={[styles.statLabel, { color: COLORS.secondary }]}>
-            REVIEWS
-          </Text>
-        </View>
-        <View style={styles.statItem}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
-            <Text style={styles.statValue}>--</Text>
-            <MaterialIcons name="star" size={20} color="#eab308" />
-          </View>
-          <Text style={[styles.statLabel, { color: COLORS.accent }]}>
-            RATING
+            JOBS COMPLETED
           </Text>
         </View>
       </View>
@@ -164,26 +158,33 @@ export default function ProfileScreen() {
         <MaterialIcons name={icon} size={24} color={color} />
       </View>
       <View style={styles.menuContent}>
-        <Text style={styles.menuTitle}>{title}</Text>
-        {subtitle && <Text style={styles.menuSubtitle}>{subtitle}</Text>}
+        <Text style={[styles.menuTitle, { color: THEME_COLORS.textMain }]}>
+          {title}
+        </Text>
+        {subtitle && (
+          <Text style={[styles.menuSubtitle, { color: THEME_COLORS.textSub }]}>
+            {subtitle}
+          </Text>
+        )}
       </View>
 
       {rightElement
         ? rightElement
         : showArrow && (
-            <MaterialIcons name="chevron-right" size={24} color="#cbd5e1" />
+            <MaterialIcons
+              name="chevron-right"
+              size={24}
+              color={THEME_COLORS.border}
+            />
           )}
     </TouchableOpacity>
   );
 
   return (
-    <View style={styles.container}>
-      <StatusBar
-        barStyle="light-content"
-        translucent
-        backgroundColor="transparent"
-      />
-
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: THEME_COLORS.background }]}
+      edges={["left", "right"]}
+    >
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
@@ -194,36 +195,54 @@ export default function ProfileScreen() {
 
         {/* Account Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionHeader}>ACCOUNT</Text>
-          <View style={styles.card}>
+          <Text style={[styles.sectionHeader, { color: THEME_COLORS.textSub }]}>
+            ACCOUNT
+          </Text>
+          <View
+            style={[
+              styles.card,
+              {
+                backgroundColor: THEME_COLORS.surface,
+                borderColor: THEME_COLORS.border,
+              },
+            ]}
+          >
             <MenuItem
               icon="person"
               title="Edit Profile"
               subtitle="Update details & photo"
               color="#10b981"
+              onPress={() => router.push("/edit-profile")}
             />
-            <View style={styles.divider} />
-            <MenuItem
-              icon="map"
-              title="Saved Addresses"
-              subtitle="Home, Office locations"
-              color="#3b82f6"
+
+            <View
+              style={[styles.divider, { backgroundColor: THEME_COLORS.border }]}
             />
-            <View style={styles.divider} />
             <MenuItem
               icon="account-balance-wallet"
               title="Payment Methods"
               subtitle="Cards & History"
               color="#0d9488"
               showArrow
+              onPress={() => router.push("/payment-methods")}
             />
           </View>
         </View>
 
         {/* Preferences Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionHeader}>PREFERENCES</Text>
-          <View style={styles.card}>
+          <Text style={[styles.sectionHeader, { color: THEME_COLORS.textSub }]}>
+            PREFERENCES
+          </Text>
+          <View
+            style={[
+              styles.card,
+              {
+                backgroundColor: THEME_COLORS.surface,
+                borderColor: THEME_COLORS.border,
+              },
+            ]}
+          >
             <MenuItem
               icon="translate"
               title="Language"
@@ -233,7 +252,7 @@ export default function ProfileScreen() {
                   <Text
                     style={{
                       fontSize: 13,
-                      color: COLORS.textSub,
+                      color: THEME_COLORS.textSub,
                       marginRight: 4,
                     }}
                   >
@@ -247,32 +266,15 @@ export default function ProfileScreen() {
                 </View>
               }
             />
-            <View style={styles.divider} />
+            <View
+              style={[styles.divider, { backgroundColor: THEME_COLORS.border }]}
+            />
             <MenuItem
               icon="notifications"
               title="Push Notifications"
               color="#d97706"
               rightElement={
-                <Switch
-                  value={pushEnabled}
-                  onValueChange={setPushEnabled}
-                  trackColor={{ false: "#e2e8f0", true: COLORS.primary }}
-                  thumbColor="white"
-                />
-              }
-            />
-            <View style={styles.divider} />
-            <MenuItem
-              icon="dark-mode"
-              title="Dark Mode"
-              color="#475569"
-              rightElement={
-                <Switch
-                  value={darkMode}
-                  onValueChange={setDarkMode}
-                  trackColor={{ false: "#e2e8f0", true: "#475569" }}
-                  thumbColor="white"
-                />
+                <Switch value={pushEnabled} onValueChange={setPushEnabled} />
               }
             />
           </View>
@@ -280,25 +282,38 @@ export default function ProfileScreen() {
 
         {/* Logout */}
         <View style={styles.footer}>
-          <TouchableOpacity style={styles.logoutBtn} onPress={() => signOut()}>
-            <MaterialIcons name="logout" size={20} color={COLORS.red500} />
+          <TouchableOpacity
+            style={[
+              styles.logoutBtn,
+              {
+                backgroundColor: "rgba(239, 68, 68, 0.1)",
+                borderColor: "rgba(239, 68, 68, 0.3)",
+              },
+            ]}
+            onPress={() => signOut()}
+          >
+            <MaterialIcons name="logout" size={20} color={THEME_COLORS.red} />
             <Text style={styles.logoutText}>Sign Out</Text>
           </TouchableOpacity>
 
           <View style={styles.versionInfo}>
-            <Text style={styles.versionRef}>FIXMATE LANKA v3.0</Text>
-            <Text style={styles.madeText}>Empowering Sri Lanka 🇱🇰</Text>
+            <Text style={[styles.versionRef, { color: THEME_COLORS.textSub }]}>
+              FIXMATE LANKA v3.0
+            </Text>
+            <Text style={[styles.madeText, { color: THEME_COLORS.textSub }]}>
+              Empowering Sri Lanka 🇱🇰
+            </Text>
           </View>
         </View>
       </ScrollView>
-    </View>
+      <BottomNavbar />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.backgroundLight,
   },
   scrollContent: {
     paddingBottom: 100,
@@ -443,11 +458,11 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   card: {
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.surface,
     borderRadius: 16,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(226, 232, 240, 0.6)",
+    borderColor: COLORS.border,
   },
   menuItem: {
     flexDirection: "row",
@@ -472,8 +487,8 @@ const styles = StyleSheet.create({
   },
   menuSubtitle: {
     fontSize: 12,
-    color: COLORS.textSub,
     marginTop: 2,
+    color: COLORS.textSub,
   },
   divider: {
     height: 1,
@@ -488,17 +503,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: COLORS.white,
+    backgroundColor: "rgba(239, 68, 68, 0.1)",
     paddingVertical: 16,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#fee2e2",
+    borderColor: "rgba(239, 68, 68, 0.3)",
     gap: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.02,
-    shadowRadius: 2,
-    elevation: 1,
   },
   logoutText: {
     color: COLORS.red500,

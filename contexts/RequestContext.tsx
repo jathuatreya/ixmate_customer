@@ -10,7 +10,10 @@ export type RequestData = {
   scheduledTime?: string;
   isFlexible?: boolean;
   status?: string;
+  budget?: string;
   userId?: string;
+  workerId?: string;
+  workerName?: string;
   createdAt?: any;
 };
 
@@ -22,15 +25,16 @@ type RequestContextType = {
 };
 
 const initialRequestData: RequestData = {
-  serviceType: "plumbing",
+  serviceType: "",
   description: "",
   urgency: "normal",
   photos: [],
-  address: "No. 12, Hospital Road, Jaffna",
+  address: "",
   scheduledDate: "",
   scheduledTime: "",
   isFlexible: false,
   status: "draft",
+  budget: "",
 };
 
 const RequestContext = createContext<RequestContextType>({

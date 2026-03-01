@@ -1,0 +1,649 @@
+🛠️ FIXMATE – Complete System Documentation
+1️⃣ SYSTEM OVERVIEW
+
+FixMate is a service marketplace platform connecting:
+
+Customers (need services)
+
+Workers (provide services)
+
+Admin (platform owner)
+
+Business Model:
+
+Customer posts job
+
+Worker accepts
+
+Work completed
+
+Customer pays through app
+
+Platform takes 10% commission
+
+Worker receives 90%
+
+2️⃣ USER ROLES
+1. Customer
+2. Worker
+3. Admin (Owner)
+3️⃣ CUSTOMER MOBILE APP (Expo)
+🔐 AUTHENTICATION FLOW
+Screens:
+1. Splash Screen
+
+Logo
+
+App name
+
+Loading animation
+
+2. Onboarding Screen
+
+Slide 1: Find Trusted Workers
+
+Slide 2: Secure Payments
+
+Slide 3: Track Your Job
+
+Buttons:
+
+Sign Up
+
+Login
+
+3. Sign Up Screen
+
+Fields:
+
+full_name (string)
+
+email (string, unique)
+
+phone_number (string)
+
+password (string, hashed)
+
+confirm_password
+
+address
+
+city
+
+profile_image (optional)
+
+Validation:
+
+Email format
+
+Password min 8 characters
+
+Phone number valid
+
+4. Login Screen
+
+Fields:
+
+email
+
+password
+
+After login:
+→ Go to Home Screen
+
+🏠 CUSTOMER APP SCREENS
+1. Home Screen
+
+Sections:
+
+Search bar
+
+Categories grid
+
+Recent jobs
+
+Active jobs
+
+Bottom Navigation
+
+Categories Example:
+
+Plumbing
+
+Electrical
+
+Cleaning
+
+Carpentry
+
+AC Repair
+
+Painting
+
+Appliance Repair
+
+Each category:
+
+category_id
+
+category_name
+
+category_icon
+
+description
+
+2. Create Job Screen
+
+Fields:
+
+category_id
+
+job_title
+
+job_description (text area)
+
+location
+
+preferred_date
+
+preferred_time
+
+urgency_level (low/medium/high)
+
+budget (optional)
+
+images (multiple upload)
+
+latitude
+
+longitude
+
+Status = "pending"
+
+3. Job Details Screen
+
+Shows:
+
+Job info
+
+Uploaded images
+
+Worker assigned
+
+Chat button
+
+Cancel button (before accepted)
+
+Statuses:
+
+pending
+
+accepted
+
+in_progress
+
+completed
+
+paid
+
+cancelled
+
+4. Chat Screen
+
+Real-time messaging
+Fields:
+
+message_id
+
+sender_id
+
+receiver_id
+
+job_id
+
+message_text
+
+message_type (text/image)
+
+created_at
+
+5. Payment Screen
+
+When job status = completed
+
+Show:
+
+Worker name
+
+Service amount
+
+Platform fee (10%)
+
+Total amount
+
+Payment gateway:
+→ PayHere integration
+
+After success:
+
+status = paid
+
+commission = 10%
+
+worker_earning = 90%
+
+6. Profile Screen
+
+Fields:
+
+full_name
+
+email
+
+phone
+
+address
+
+change password
+
+logout
+
+job history
+
+4️⃣ WORKER MOBILE APP (Expo)
+🔐 Worker Authentication
+
+Sign Up fields:
+
+full_name
+
+email
+
+phone
+
+password
+
+NIC number
+
+profile_image
+
+service_categories (multi-select)
+
+experience_years
+
+hourly_rate
+
+service_area
+
+police_clearance_doc (optional)
+
+bank_account_details
+
+Admin must approve worker.
+
+Worker status:
+
+pending_approval
+
+approved
+
+rejected
+
+🏠 Worker Home Screen
+
+Sections:
+
+Available Jobs
+
+My Accepted Jobs
+
+Earnings Summary
+
+Rating
+
+1. Available Jobs Screen
+
+Shows:
+
+Nearby jobs (based on location)
+
+Category match only
+
+Worker can:
+
+View details
+
+Accept job
+
+Reject job
+
+2. Job Work Screen
+
+If accepted:
+
+Buttons:
+
+Start Work → status = in_progress
+
+Complete Work → status = completed
+
+3. Earnings Screen
+
+Shows:
+
+Total earned
+
+Platform commission
+
+Withdrawable balance
+
+Completed jobs count
+
+Fields:
+
+transaction_id
+
+job_id
+
+amount
+
+commission
+
+net_amount
+
+payout_status
+
+4. Worker Profile
+
+Edit profile
+
+Change rate
+
+Ratings & reviews
+
+Logout
+
+5️⃣ ADMIN DASHBOARD (Next.js + Tailwind)
+🔐 Admin Login
+
+Fields:
+
+email
+
+password
+
+📊 Dashboard Home
+
+Cards:
+
+Total Customers
+
+Total Workers
+
+Active Jobs
+
+Total Revenue
+
+Commission Earned
+
+Today Earnings
+
+Charts:
+
+Jobs per day
+
+Revenue graph
+
+👥 User Management
+Customers Table
+
+Columns:
+
+ID
+
+Name
+
+Email
+
+Phone
+
+Total Jobs
+
+Status
+
+Created Date
+
+Actions:
+
+Block
+
+Delete
+
+Workers Table
+
+Columns:
+
+ID
+
+Name
+
+Categories
+
+Approval Status
+
+Rating
+
+Total Earnings
+
+Actions:
+
+Approve
+
+Reject
+
+Suspend
+
+🛠 Job Management
+
+Table:
+
+Job ID
+
+Customer
+
+Worker
+
+Category
+
+Status
+
+Amount
+
+Commission
+
+Created Date
+
+Filters:
+
+By status
+
+By date
+
+By category
+
+💰 Commission Management
+
+Total commission
+
+Per job commission
+
+Monthly commission report
+
+Download CSV
+
+⭐ Reviews Management
+
+View all ratings
+
+Remove inappropriate reviews
+
+6️⃣ DATABASE STRUCTURE
+USERS TABLE
+id (UUID)
+role (customer/worker/admin)
+full_name
+email (unique)
+phone
+password_hash
+profile_image
+address
+city
+latitude
+longitude
+status
+created_at
+updated_at
+WORKER_DETAILS
+worker_id (FK)
+nic_number
+experience_years
+hourly_rate
+service_area
+bank_account_number
+bank_name
+approval_status
+rating
+total_earnings
+CATEGORIES
+id
+name
+icon
+description
+JOBS
+id
+customer_id
+worker_id
+category_id
+title
+description
+location
+latitude
+longitude
+preferred_date
+preferred_time
+urgency
+budget
+status
+created_at
+updated_at
+JOB_IMAGES
+id
+job_id
+image_url
+PAYMENTS
+id
+job_id
+customer_id
+worker_id
+total_amount
+commission_amount
+worker_amount
+payment_status
+payment_gateway_ref
+created_at
+REVIEWS
+id
+job_id
+customer_id
+worker_id
+rating (1-5)
+review_text
+created_at
+7️⃣ COMPLETE USER FLOW
+Customer Flow
+
+Install app
+
+Sign up
+
+Login
+
+Select category
+
+Create job
+
+Worker accepts
+
+Chat
+
+Work complete
+
+Pay
+
+Rate worker
+
+Worker Flow
+
+Install app
+
+Sign up
+
+Wait approval
+
+Login
+
+View jobs
+
+Accept job
+
+Start work
+
+Complete work
+
+Receive payment
+
+View earnings
+
+Admin Flow
+
+Login
+
+Approve workers
+
+Monitor jobs
+
+Monitor payments
+
+Track commission
+
+Manage users
+
+8️⃣ BUSINESS LOGIC RULES
+
+Worker cannot accept multiple overlapping jobs.
+
+Customer cannot cancel after job is in_progress.
+
+Payment must go through platform.
+
+Commission fixed at 10%.
+
+Worker rating updates automatically.
+
+Job auto-cancel if not accepted in 24 hours.
+
+9️⃣ FUTURE FEATURES
+
+In-app wallet
+
+Subscription plan for workers
+
+Priority job listing
+
+AI job matching
+
+Geo-fencing
+
+Promo codes
+
+Dispute system

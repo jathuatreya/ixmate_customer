@@ -2,42 +2,38 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import {
-    collection,
-    limit,
-    onSnapshot,
-    query,
-    where,
+  collection,
+  limit,
+  onSnapshot,
+  query,
+  where,
 } from "firebase/firestore";
 import React from "react";
 import {
-    Dimensions,
-    Platform,
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Dimensions,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { BottomNavbar } from "../components/BottomNavbar";
+import { useTheme, getColors } from "../contexts/ThemeContext";
 import { useSession } from "../ctx";
 import { db } from "../utils/firebaseConfig";
 
 // Theme Colors
 const COLORS = {
-  primary: "#118976",
-  primaryDark: "#0d6e5e",
+  primary: "#10B981",
+  primaryDark: "#059669",
   secondaryBlue: "#3B82F6",
-  surfaceLight: "#FFFFFF",
-  surfaceDark: "#1E1E1E",
-  backgroundLight: "#F8FAFC",
-  backgroundDark: "#0F172A",
-  text: "#1e293b", // slate-800
-  textLight: "#f8fafc",
-  slatemuted: "#64748b", // slate-500
-  emerald50: "#ecfdf5",
-  emerald100: "#d1fae5",
+  surface: "#0f172a",
+  background: "#020617",
+  text: "#f8fafc",
+  textSub: "#94a3b8",
+  border: "#1e293b",
   white: "#ffffff",
 };
 
@@ -45,6 +41,10 @@ const SCREEN_WIDTH = Dimensions.get("window").width;
 
 export default function ClientDashboard() {
   const router = useRouter();
+  // Removed theme context as we are hardcoding dark theme colors
+  // const { theme } = useTheme();
+  // const THEME_COLORS = getColors(theme);
+  // const isDark = theme === "dark";
   const { user } = useSession();
   const [searchQuery, setSearchQuery] = React.useState("");
   const [activeRequest, setActiveRequest] = React.useState<any>(null);
@@ -111,54 +111,7 @@ export default function ClientDashboard() {
   );
 
   return (
-    <View style={styles.container}>
-      <StatusBar
-        barStyle="light-content"
-        translucent
-        backgroundColor="transparent"
-      />
-
-      {/* Footer Navigation - Fixed at bottom */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navItem}>
-          <View style={styles.navIconActiveContainer}>
-            <MaterialIcons name="home" size={24} color={COLORS.primary} />
-          </View>
-          <Text
-            style={[
-              styles.navLabel,
-              { color: COLORS.primary, fontWeight: "bold" },
-            ]}
-          >
-            Home
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => router.push("/my-requests")}
-        >
-          <MaterialIcons name="history" size={24} color="#94a3b8" />
-          <Text style={styles.navLabel}>History</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => router.push("/chat")}
-        >
-          <MaterialIcons name="chat-bubble-outline" size={24} color="#94a3b8" />
-          <Text style={styles.navLabel}>Chats</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => router.push("/profile")}
-        >
-          <MaterialIcons name="person-outline" size={24} color="#94a3b8" />
-          <Text style={styles.navLabel}>Profile</Text>
-        </TouchableOpacity>
-      </View>
-
+    <View style={[styles.container, { backgroundColor: COLORS.background }]}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -167,7 +120,7 @@ export default function ClientDashboard() {
         {/* Header Section */}
         <View style={styles.headerContainer}>
           <LinearGradient
-            colors={["#065F46", "#14B8A6"]}
+            colors={["#020617", "#0f172a"]} // Hardcoded dark theme colors
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.headerGradient}
@@ -180,8 +133,17 @@ export default function ClientDashboard() {
               {/* User Info Row */}
               <View style={styles.userInfoRow}>
                 <View>
-                  <Text style={styles.welcomeLabel}>Welcome back,</Text>
-                  <Text style={styles.userName}>{user?.name || "User"}</Text>
+                  <Text
+                    style={[
+                      styles.welcomeLabel,
+                      { color: "rgba(255,255,255,0.7)" },
+                    ]}
+                  >
+                    Welcome back,
+                  </Text>
+                  <Text style={[styles.userName, { color: "white" }]}>
+                    {user?.name || "User"}
+                  </Text>
                 </View>
                 <TouchableOpacity
                   onPress={() => router.push("/profile")}
@@ -197,18 +159,17 @@ export default function ClientDashboard() {
                   <MaterialIcons name="location-on" size={18} color="white" />
                   <Text style={styles.locationText}>Sri Lanka</Text>
                 </View>
-
-                <TouchableOpacity
-                  style={styles.notificationBtn}
-                  onPress={() => router.push("/notifications")}
-                >
-                  <MaterialIcons name="notifications" size={20} color="white" />
-                  <View style={styles.notificationDot} />
-                </TouchableOpacity>
               </View>
 
               {/* Search Bar */}
-              <View style={styles.searchContainer}>
+              <View
+                style={[
+                  styles.searchContainer,
+                  {
+                    backgroundColor: "rgba(255,255,255,0.05)", // Hardcoded dark theme search background
+                  },
+                ]}
+              >
                 <View style={styles.searchIconWrapper}>
                   <MaterialIcons
                     name="search"
@@ -216,27 +177,59 @@ export default function ClientDashboard() {
                     color="rgba(209, 250, 229, 0.7)"
                   />
                 </View>
-                <TextInput
-                  style={styles.searchInput}
-                  placeholder="Find a service (e.g. Electrician)"
+                <TextInput autoComplete='off' autoCorrect={false} spellCheck={false}
+                  style={[styles.searchInput, { color: "white" }]}
+                  placeholder="Find a service (e.g. Mason)"
                   placeholderTextColor="rgba(209, 250, 229, 0.6)"
                   value={searchQuery}
                   onChangeText={setSearchQuery}
                 />
-                <TouchableOpacity style={styles.filterBtn}>
-                  <MaterialIcons name="tune" size={18} color={COLORS.primary} />
-                </TouchableOpacity>
               </View>
             </SafeAreaView>
           </LinearGradient>
         </View>
 
+        {/* Browse Workers Banner */}
+        <TouchableOpacity
+          style={[
+            styles.browseBanner,
+            {
+              backgroundColor: COLORS.primary + "15",
+              borderColor: COLORS.primary,
+            },
+          ]}
+          onPress={() => router.push("/workers")}
+        >
+          <View
+            style={[styles.browseIcon, { backgroundColor: COLORS.primary }]}
+          >
+            <MaterialIcons name="engineering" size={24} color="white" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.browseTitle, { color: COLORS.text }]}>
+              Find Skilled Workers
+            </Text>
+            <Text style={[styles.browseSub, { color: COLORS.textSub }]}>
+              Browse top-rated professionals nearby
+            </Text>
+          </View>
+          <MaterialIcons
+            name="chevron-right"
+            size={24}
+            color={COLORS.primary}
+          />
+        </TouchableOpacity>
+
         {/* Categories Section */}
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Categories</Text>
+            <Text style={[styles.sectionTitle, { color: COLORS.text }]}>
+              Categories
+            </Text>
             <TouchableOpacity onPress={() => setSearchQuery("")}>
-              <Text style={styles.seeAllText}>See All</Text>
+              <Text style={[styles.seeAllText, { color: COLORS.primary }]}>
+                See All
+              </Text>
             </TouchableOpacity>
           </View>
 
@@ -249,25 +242,36 @@ export default function ClientDashboard() {
               {filteredCategories.map((cat) => (
                 <TouchableOpacity
                   key={cat.id}
-                  style={styles.categoryItem}
+                  style={[
+                    styles.categoryItem,
+                    {
+                      backgroundColor: COLORS.surface,
+                      borderColor: COLORS.border,
+                    },
+                  ]}
                   onPress={() => router.push("/create-request")}
                 >
-                  <View style={styles.categoryIconContainer}>
+                  <View
+                    style={[
+                      styles.categoryIconContainer,
+                      { backgroundColor: COLORS.background },
+                    ]}
+                  >
                     <MaterialIcons
                       name={cat.icon as any}
                       size={28}
                       color={cat.color}
                     />
                   </View>
-                  <Text style={styles.categoryName}>{cat.name}</Text>
+                  <Text style={[styles.categoryName, { color: COLORS.text }]}>
+                    {cat.name}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
           ) : (
             <View style={{ alignItems: "center", padding: 20 }}>
-              <Text style={{ color: COLORS.slatemuted }}>
-                No categories found
-              </Text>
+              <Text style={{ color: COLORS.textSub }}>No categories found</Text>
             </View>
           )}
         </View>
@@ -275,9 +279,17 @@ export default function ClientDashboard() {
         {/* Active Request Card */}
         {activeRequest && (
           <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>Active Request</Text>
+            <Text style={[styles.sectionTitle, { color: COLORS.text }]}>
+              Active Request
+            </Text>
             <TouchableOpacity
-              style={styles.activeRequestCard}
+              style={[
+                styles.activeRequestCard,
+                {
+                  backgroundColor: COLORS.surface,
+                  borderColor: COLORS.border,
+                },
+              ]}
               activeOpacity={0.9}
               onPress={() => router.push("/request-status")}
             >
@@ -286,7 +298,12 @@ export default function ClientDashboard() {
               </View>
 
               <View style={styles.requestContent}>
-                <View style={styles.requestIconBox}>
+                <View
+                  style={[
+                    styles.requestIconBox,
+                    { backgroundColor: COLORS.background },
+                  ]}
+                >
                   <MaterialIcons
                     name="build"
                     size={24}
@@ -294,16 +311,21 @@ export default function ClientDashboard() {
                   />
                 </View>
                 <View>
-                  <Text style={styles.requestTitle}>
+                  <Text style={[styles.requestTitle, { color: COLORS.text }]}>
                     {activeRequest.serviceType}
                   </Text>
                   <View style={styles.requestDetail}>
                     <MaterialIcons
                       name="schedule"
                       size={14}
-                      color={COLORS.slatemuted}
+                      color={COLORS.textSub}
                     />
-                    <Text style={styles.requestDetailText}>
+                    <Text
+                      style={[
+                        styles.requestDetailText,
+                        { color: COLORS.textSub },
+                      ]}
+                    >
                       {activeRequest.scheduledDate}{" "}
                       {activeRequest.scheduledTime}
                     </Text>
@@ -312,9 +334,15 @@ export default function ClientDashboard() {
                     <MaterialIcons
                       name="location-on"
                       size={14}
-                      color={COLORS.slatemuted}
+                      color={COLORS.textSub}
                     />
-                    <Text style={styles.requestDetailText} numberOfLines={1}>
+                    <Text
+                      style={[
+                        styles.requestDetailText,
+                        { color: COLORS.textSub },
+                      ]}
+                      numberOfLines={1}
+                    >
                       {activeRequest.address}
                     </Text>
                   </View>
@@ -332,11 +360,22 @@ export default function ClientDashboard() {
               </View>
 
               <View style={styles.cardFooter}>
-                <Text style={styles.footerStatusText}>
+                <Text
+                  style={[styles.footerStatusText, { color: COLORS.textSub }]}
+                >
                   Status: {activeRequest.status}
                 </Text>
-                <TouchableOpacity style={styles.viewDetailsBtn}>
-                  <Text style={styles.viewDetailsText}>View Details</Text>
+                <TouchableOpacity
+                  style={[
+                    styles.viewDetailsBtn,
+                    { borderColor: COLORS.primary + "30" },
+                  ]}
+                >
+                  <Text
+                    style={[styles.viewDetailsText, { color: COLORS.primary }]}
+                  >
+                    View Details
+                  </Text>
                 </TouchableOpacity>
               </View>
             </TouchableOpacity>
@@ -351,7 +390,7 @@ export default function ClientDashboard() {
             onPress={() => router.push("/create-request")}
           >
             <LinearGradient
-              colors={[COLORS.primary, "#34d399"]}
+              colors={[COLORS.primary, COLORS.primaryDark]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.createRequestGradient}
@@ -366,12 +405,14 @@ export default function ClientDashboard() {
 
         {/* Recent History */}
         <View style={[styles.sectionContainer, { paddingBottom: 100 }]}>
-          <Text style={styles.sectionTitle}>Recent History</Text>
+          <Text style={[styles.sectionTitle, { color: COLORS.text }]}>
+            Recent History
+          </Text>
           <View style={styles.historyList}>
             {recentRequests.length === 0 ? (
               <Text
                 style={{
-                  color: COLORS.slatemuted,
+                  color: COLORS.textSub,
                   textAlign: "center",
                   marginTop: 10,
                 }}
@@ -380,29 +421,51 @@ export default function ClientDashboard() {
               </Text>
             ) : (
               recentRequests.map((item) => (
-                <View key={item.id} style={styles.historyItem}>
+                <View
+                  key={item.id}
+                  style={[
+                    styles.historyItem,
+                    {
+                      backgroundColor: COLORS.surface,
+                      borderColor: COLORS.border,
+                    },
+                  ]}
+                >
                   <View style={styles.historyLeft}>
                     <View
                       style={[
                         styles.historyIconBox,
-                        { backgroundColor: "#f1f5f9" },
+                        { backgroundColor: COLORS.background },
                       ]}
                     >
                       <MaterialIcons
                         name="history"
                         size={20}
-                        color={COLORS.slatemuted}
+                        color={COLORS.textSub}
                       />
                     </View>
                     <View>
-                      <Text style={styles.historyName}>{item.serviceType}</Text>
-                      <Text style={styles.historyDate}>
+                      <Text
+                        style={[styles.historyName, { color: COLORS.text }]}
+                      >
+                        {item.serviceType}
+                      </Text>
+                      <Text
+                        style={[styles.historyDate, { color: COLORS.textSub }]}
+                      >
                         {item.scheduledDate}
                       </Text>
                     </View>
                   </View>
                   <View style={styles.historyBadge}>
-                    <Text style={styles.historyBadgeText}>{item.status}</Text>
+                    <Text
+                      style={[
+                        styles.historyBadgeText,
+                        { color: COLORS.primary },
+                      ]}
+                    >
+                      {item.status}
+                    </Text>
                   </View>
                 </View>
               ))
@@ -410,6 +473,8 @@ export default function ClientDashboard() {
           </View>
         </View>
       </ScrollView>
+
+      <BottomNavbar />
     </View>
   );
 }
@@ -417,7 +482,7 @@ export default function ClientDashboard() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.backgroundLight,
+    backgroundColor: "#020617",
   },
   scrollView: {
     flex: 1,
@@ -471,7 +536,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   welcomeLabel: {
-    color: COLORS.emerald100,
+    color: "#10B981",
     fontSize: 14,
     fontWeight: "500",
     marginBottom: 4,
@@ -591,7 +656,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 16,
-    backgroundColor: "white",
+    backgroundColor: "#0f172a",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 8,
@@ -601,19 +666,19 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
     borderWidth: 1,
-    borderColor: "#f1f5f9",
+    borderColor: "#1e293b",
   },
   categoryName: {
     fontSize: 12,
     fontWeight: "500",
-    color: "#475569",
+    color: "#f8fafc", // Changed to light text
   },
   activeRequestCard: {
-    backgroundColor: "white",
+    backgroundColor: "#0f172a",
     borderRadius: 24,
     padding: 20,
-    borderWidth: 2,
-    borderColor: "rgba(59, 130, 246, 0.1)", // Light blue tint
+    borderWidth: 1,
+    borderColor: "#1e293b",
     shadowColor: COLORS.secondaryBlue,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
@@ -648,12 +713,12 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 16,
-    backgroundColor: "#ecfdf5",
+    backgroundColor: "#020617", // Changed to dark background
     alignItems: "center",
     justifyContent: "center",
     marginRight: 16,
     borderWidth: 1,
-    borderColor: "#d1fae5",
+    borderColor: "#1e293b", // Changed to dark border
   },
   requestTitle: {
     fontSize: 18,
@@ -668,13 +733,13 @@ const styles = StyleSheet.create({
   },
   requestDetailText: {
     fontSize: 12,
-    color: COLORS.slatemuted,
+    color: COLORS.textSub,
     marginLeft: 4,
     fontWeight: "500",
   },
   progressBarBg: {
     height: 10,
-    backgroundColor: "#f3f4f6",
+    backgroundColor: "#1e293b", // Changed to dark background
     borderRadius: 5,
     marginBottom: 16,
     overflow: "hidden",
@@ -693,20 +758,20 @@ const styles = StyleSheet.create({
   footerStatusText: {
     fontSize: 12,
     fontWeight: "500",
-    color: COLORS.slatemuted,
+    color: COLORS.textSub,
   },
   viewDetailsBtn: {
-    backgroundColor: "#eff6ff",
+    backgroundColor: "#0f172a", // Changed to dark surface
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "rgba(59, 130, 246, 0.3)",
+    borderColor: COLORS.primary + "30",
   },
   viewDetailsText: {
     fontSize: 12,
     fontWeight: "bold",
-    color: COLORS.secondaryBlue,
+    color: COLORS.primary,
   },
   createRequestBtn: {
     borderRadius: 16,
@@ -734,14 +799,14 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   historyItem: {
-    backgroundColor: "white",
+    backgroundColor: "#0f172a",
     borderRadius: 16,
     padding: 16,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     borderWidth: 1,
-    borderColor: "#f1f5f9",
+    borderColor: "#1e293b",
   },
   historyLeft: {
     flexDirection: "row",
@@ -762,7 +827,7 @@ const styles = StyleSheet.create({
   },
   historyDate: {
     fontSize: 12,
-    color: COLORS.slatemuted,
+    color: COLORS.textSub,
     marginTop: 2,
   },
   historyBadge: {
@@ -775,40 +840,35 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textTransform: "uppercase",
   },
-  bottomNav: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: "white",
+  browseBanner: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    paddingVertical: 12,
-    paddingBottom: Platform.OS === "ios" ? 24 : 12,
-    borderTopWidth: 1,
-    borderTopColor: "#f1f5f9",
-    zIndex: 100,
-    elevation: 20,
+    alignItems: "center",
+    marginHorizontal: 20,
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    marginTop: -20,
+    marginBottom: 24,
+    gap: 12,
+    elevation: 2,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: -5 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
-    shadowRadius: 10,
+    shadowRadius: 4,
   },
-  navItem: {
+  browseIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
   },
-  navIconActiveContainer: {
-    backgroundColor: "#ecfdf5",
-    paddingHorizontal: 16,
-    paddingVertical: 4,
-    borderRadius: 16,
-    marginBottom: 4,
+  browseTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
   },
-  navLabel: {
-    fontSize: 10,
-    fontWeight: "500",
-    color: "#94a3b8",
+  browseSub: {
+    fontSize: 12,
     marginTop: 2,
   },
 });

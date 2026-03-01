@@ -3,40 +3,42 @@ import { useRouter } from "expo-router";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
-    Platform,
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { BottomNavbar } from "../components/BottomNavbar";
+import { useTheme, getColors } from "../contexts/ThemeContext";
 import { useSession } from "../ctx";
 import { db } from "../utils/firebaseConfig";
 
 const COLORS = {
-  primary: "#2563EB", // Blue-600
-  primaryDark: "#1D4ED8",
-  secondary: "#059669", // Emerald-600
-  backgroundLight: "#F8FAFC",
-  stroke: "#E2E8F0",
+  primary: "#10B981",
+  primaryDark: "#059669",
+  secondary: "#3B82F6",
+  stroke: "#1e293b",
   white: "#FFFFFF",
-  textDark: "#1E293B",
-  textGray: "#64748B",
-  statusActive: "#2563EB",
-  statusCompleted: "#059669",
-  statusPending: "#D97706",
-  statusCancelled: "#DC2626",
-  bgActive: "#EFF6FF",
-  bgCompleted: "#ECFDF5",
-  bgPending: "#FFF7ED",
-  bgCancelled: "#FEF2F2",
+  textDark: "#f8fafc",
+  textGray: "#94a3b8",
+  statusActive: "#3B82F6",
+  statusCompleted: "#10B981",
+  statusPending: "#F59E0B",
+  statusCancelled: "#EF4444",
+  bgActive: "rgba(59, 130, 246, 0.15)",
+  bgCompleted: "rgba(16, 185, 129, 0.15)",
+  bgPending: "rgba(245, 158, 11, 0.15)",
+  bgCancelled: "rgba(239, 68, 68, 0.15)",
 };
 
 export default function MyRequestsScreen() {
   const router = useRouter();
+  const { theme } = useTheme();
+  const THEME_COLORS = getColors(theme);
+  const isDark = theme === "dark";
   const { user } = useSession();
   const [filter, setFilter] = useState("All");
   const [requests, setRequests] = useState<any[]>([]);
@@ -97,39 +99,42 @@ export default function MyRequestsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor={COLORS.backgroundLight}
-      />
-
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <MaterialIcons name="arrow-back" size={24} color={COLORS.textDark} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>My Requests</Text>
-      </View>
-
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: THEME_COLORS.background }]}
+      edges={["left", "right"]}
+    >
       {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <View style={styles.searchWrapper}>
+      <View
+        style={[
+          styles.searchContainer,
+          {
+            backgroundColor: THEME_COLORS.surface,
+            borderBottomColor: THEME_COLORS.border,
+          },
+        ]}
+      >
+        <View
+          style={[
+            styles.searchWrapper,
+            {
+              backgroundColor: THEME_COLORS.background,
+              borderColor: THEME_COLORS.border,
+            },
+          ]}
+        >
           <MaterialIcons
             name="search"
             size={20}
-            color={COLORS.textGray}
+            color={THEME_COLORS.textSub}
             style={styles.searchIcon}
           />
-          <TextInput
-            style={styles.searchInput}
+          <TextInput autoComplete='off' autoCorrect={false} spellCheck={false}
+            style={[styles.searchInput, { color: THEME_COLORS.textMain }]}
             placeholder="Search service, worker..."
-            placeholderTextColor={COLORS.textGray}
+            placeholderTextColor={THEME_COLORS.textSub}
           />
           <TouchableOpacity style={styles.filterIconBtn}>
-            <MaterialIcons name="tune" size={20} color={COLORS.textGray} />
+            <MaterialIcons name="tune" size={20} color={THEME_COLORS.textSub} />
           </TouchableOpacity>
         </View>
       </View>
@@ -146,17 +151,20 @@ export default function MyRequestsScreen() {
               key={tab}
               style={[
                 styles.tabButton,
-                filter === tab && styles.tabButtonActive,
-                filter !== tab && styles.tabButtonInactive,
+                { borderColor: THEME_COLORS.border },
+                filter === tab && {
+                  backgroundColor: THEME_COLORS.primary,
+                  borderColor: THEME_COLORS.primary,
+                },
+                filter !== tab && { backgroundColor: "transparent" },
               ]}
               onPress={() => setFilter(tab)}
             >
               <Text
                 style={[
                   styles.tabText,
-                  filter === tab
-                    ? styles.tabTextActive
-                    : styles.tabTextInactive,
+                  { color: THEME_COLORS.textSub },
+                  filter === tab && { color: "white" },
                 ]}
               >
                 {tab}
@@ -176,9 +184,9 @@ export default function MyRequestsScreen() {
             <MaterialIcons
               name="assignment"
               size={48}
-              color={COLORS.textGray}
+              color={THEME_COLORS.textSub}
             />
-            <Text style={{ marginTop: 10, color: COLORS.textGray }}>
+            <Text style={{ marginTop: 10, color: THEME_COLORS.textSub }}>
               No requests found
             </Text>
           </View>
@@ -186,15 +194,22 @@ export default function MyRequestsScreen() {
 
         {filteredRequests.length > 0 &&
           filteredRequests.map((item) => (
-            <View
+            <TouchableOpacity
               key={item.id}
               style={[
                 styles.card,
                 {
                   borderLeftColor: getStatusColor(item.status),
-                  opacity: item.status === "Cancelled" ? 0.6 : 1,
+                  opacity: item.status === "cancelled" ? 0.6 : 1,
                 },
               ]}
+              onPress={() =>
+                router.push({
+                  pathname: "/request-status",
+                  params: { id: item.id },
+                })
+              }
+              activeOpacity={0.7}
             >
               {/* Card Header */}
               <View style={styles.cardHeader}>
@@ -212,17 +227,27 @@ export default function MyRequestsScreen() {
                     />
                   </View>
                   <View>
-                    <Text style={styles.cardTitle}>
+                    <Text
+                      style={[
+                        styles.cardTitle,
+                        { color: THEME_COLORS.textMain },
+                      ]}
+                    >
                       {item.serviceType || "Service Request"}
                     </Text>
                     <View style={styles.dateRow}>
                       <MaterialIcons
                         name="calendar-today"
                         size={12}
-                        color={COLORS.textGray}
+                        color={THEME_COLORS.textSub}
                         style={{ marginRight: 4 }}
                       />
-                      <Text style={styles.dateText}>
+                      <Text
+                        style={[
+                          styles.dateText,
+                          { color: THEME_COLORS.textSub },
+                        ]}
+                      >
                         {item.scheduledDate} {item.scheduledTime}
                       </Text>
                     </View>
@@ -253,12 +278,18 @@ export default function MyRequestsScreen() {
                     size={18}
                     color={
                       item.status === "Active"
-                        ? COLORS.primary
-                        : COLORS.textGray
+                        ? THEME_COLORS.primary
+                        : THEME_COLORS.textSub
                     }
                     style={{ marginRight: 8 }}
                   />
-                  <Text style={styles.detailText} numberOfLines={1}>
+                  <Text
+                    style={[
+                      styles.detailText,
+                      { color: THEME_COLORS.textMain },
+                    ]}
+                    numberOfLines={1}
+                  >
                     {item.address || "No address provided"}
                   </Text>
                 </View>
@@ -267,10 +298,15 @@ export default function MyRequestsScreen() {
                     <MaterialIcons
                       name="person"
                       size={18}
-                      color={COLORS.textGray}
+                      color={THEME_COLORS.textSub}
                       style={{ marginRight: 8 }}
                     />
-                    <Text style={[styles.detailText, { fontStyle: "italic" }]}>
+                    <Text
+                      style={[
+                        styles.detailText,
+                        { fontStyle: "italic", color: THEME_COLORS.textMain },
+                      ]}
+                    >
                       {item.workerName
                         ? item.workerName
                         : "Worker assignment pending..."}
@@ -281,16 +317,7 @@ export default function MyRequestsScreen() {
 
               {/* Actions */}
               <View style={styles.actionRow}>
-                {/* Actions Logic - simplified for safety */}
-                {item.status === "Pending" && (
-                  <TouchableOpacity
-                    style={styles.btnOutlineFull}
-                    onPress={() => router.push("/request-status")}
-                  >
-                    <Text style={styles.btnOutlineText}>View Status</Text>
-                  </TouchableOpacity>
-                )}
-                {item.status === "Active" && (
+                {item.status?.toLowerCase() === "active" && (
                   <TouchableOpacity
                     style={styles.btnPrimary}
                     onPress={() => router.push("/chat")}
@@ -305,53 +332,11 @@ export default function MyRequestsScreen() {
                   </TouchableOpacity>
                 )}
               </View>
-            </View>
+            </TouchableOpacity>
           ))}
       </ScrollView>
 
-      {/* Bottom Nav */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => router.push("/client-home")}
-        >
-          <MaterialIcons name="home" size={26} color={COLORS.textGray} />
-          <Text style={styles.navLabel}>Home</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => router.push("/my-requests")}
-        >
-          <View>
-            <MaterialIcons name="history" size={26} color={COLORS.primary} />
-            <View style={styles.navDot} />
-          </View>
-          <Text
-            style={[
-              styles.navLabel,
-              { color: COLORS.primary, fontWeight: "bold" },
-            ]}
-          >
-            History
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <MaterialIcons
-            name="chat-bubble-outline"
-            size={26}
-            color={COLORS.textGray}
-          />
-          <Text style={styles.navLabel}>Chats</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <MaterialIcons
-            name="person-outline"
-            size={26}
-            color={COLORS.textGray}
-          />
-          <Text style={styles.navLabel}>Profile</Text>
-        </TouchableOpacity>
-      </View>
+      <BottomNavbar />
     </SafeAreaView>
   );
 }
@@ -359,14 +344,14 @@ export default function MyRequestsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.backgroundLight,
+    backgroundColor: "#020617",
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 12,
-    backgroundColor: COLORS.backgroundLight,
+    backgroundColor: "#020617",
   },
   backButton: {
     padding: 4,
@@ -382,12 +367,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginBottom: 16,
   },
+
   searchWrapper: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f8fafc",
+    backgroundColor: "#0f172a",
     borderWidth: 1,
-    borderColor: "#e2e8f0",
+    borderColor: "#1e293b",
     borderRadius: 12,
     paddingHorizontal: 12,
     height: 48,
@@ -398,7 +384,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     height: "100%",
-    color: COLORS.textDark,
+    color: "#f8fafc",
     fontSize: 14,
   },
   filterIconBtn: {
@@ -430,8 +416,8 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   tabButtonInactive: {
-    backgroundColor: COLORS.white,
-    borderColor: COLORS.stroke,
+    backgroundColor: "#0f172a",
+    borderColor: "#1e293b",
   },
   tabText: {
     fontSize: 14,
@@ -441,7 +427,7 @@ const styles = StyleSheet.create({
     color: "white",
   },
   tabTextInactive: {
-    color: COLORS.textGray,
+    color: "#94a3b8",
   },
   listContent: {
     paddingHorizontal: 20,
@@ -449,11 +435,11 @@ const styles = StyleSheet.create({
     gap: 20,
   },
   card: {
-    backgroundColor: COLORS.white,
+    backgroundColor: "#0f172a",
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: COLORS.stroke,
+    borderColor: "#1e293b",
     borderLeftWidth: 4, // Status color border
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -533,11 +519,11 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   detailsBox: {
-    backgroundColor: "#f8fafc",
+    backgroundColor: "#020617",
     borderRadius: 8,
     padding: 12,
     borderWidth: 1,
-    borderColor: "#f1f5f9",
+    borderColor: "#1e293b",
     marginBottom: 16,
     gap: 6,
   },
@@ -547,7 +533,7 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: 13,
-    color: COLORS.textGray,
+    color: "#f8fafc",
     flex: 1,
   },
   actionRow: {
@@ -559,8 +545,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: COLORS.stroke,
-    backgroundColor: "white",
+    borderColor: "#1e293b",
+    backgroundColor: "#0f172a",
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
@@ -568,15 +554,15 @@ const styles = StyleSheet.create({
   btnOutlineText: {
     fontSize: 13,
     fontWeight: "600",
-    color: COLORS.textDark,
+    color: "#f8fafc",
   },
   btnOutlineFull: {
     width: "100%",
     paddingVertical: 10,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: COLORS.stroke,
-    backgroundColor: "white",
+    borderColor: "#1e293b",
+    backgroundColor: "#0f172a",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -598,45 +584,5 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     color: "white",
-  },
-  bottomNav: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: "white",
-    borderTopWidth: 1,
-    borderTopColor: COLORS.stroke,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    paddingBottom: Platform.OS === "ios" ? 24 : 12,
-    zIndex: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.02,
-    shadowRadius: 4,
-    elevation: 10,
-  },
-  navItem: {
-    alignItems: "center",
-    gap: 4,
-  },
-  navLabel: {
-    fontSize: 10,
-    fontWeight: "500",
-    color: COLORS.textGray,
-  },
-  navDot: {
-    position: "absolute",
-    top: -2,
-    right: -2,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#ef4444",
-    borderWidth: 1.5,
-    borderColor: "white",
   },
 });

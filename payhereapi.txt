@@ -1,0 +1,123 @@
+🧪 1️⃣ Sandbox URLs (Testing Environment)
+🔹 Checkout URL (Sandbox)
+https://sandbox.payhere.lk/pay/checkout
+🔹 Production URL
+https://www.payhere.lk/pay/checkout
+🧾 2️⃣ Standard Payment Parameters (One-Time Payment)
+
+You POST these fields to PayHere:
+
+Field	Required	Description
+merchant_id	✅	Given by PayHere
+return_url	✅	Success redirect
+cancel_url	✅	Cancel redirect
+notify_url	✅	IPN webhook URL
+order_id	✅	Unique order ID
+items	✅	Item name
+currency	✅	LKR
+amount	✅	Total amount
+first_name	✅	Customer first name
+last_name	✅	Customer last name
+email	✅	Customer email
+phone	❌	Optional
+address	❌	Optional
+city	❌	Optional
+country	❌	Optional
+hash	✅	Security hash
+🔐 3️⃣ Hash Generation (IMPORTANT)
+
+You must generate hash in backend.
+
+Formula:
+hash = md5(merchant_id + order_id + amount + currency + md5(merchant_secret))
+
+⚠️ Amount must be formatted to 2 decimal places.
+
+📩 4️⃣ Notify URL (IPN Webhook)
+
+When payment completes, PayHere sends POST data to:
+
+https://yourdomain.com/api/payhere/notify
+
+You will receive:
+
+Field	Description
+merchant_id	Your ID
+order_id	Order ID
+payhere_amount	Paid amount
+payhere_currency	Currency
+status_code	2 = Success
+md5sig	Signature
+✅ Payment Status Codes
+Code	Meaning
+2	Success
+0	Pending
+-1	Cancelled
+-2	Failed
+-3	Chargedback
+🔁 5️⃣ Recurring Payments (Preapproval API)
+Sandbox URL:
+https://sandbox.payhere.lk/pay/preapprove
+
+Extra Parameters:
+
+Field	Description
+recurrence	1 Month / 1 Year
+duration	12 Months
+💰 6️⃣ Refund API (Server to Server)
+
+Refunds are NOT frontend-based.
+
+You must call:
+
+https://sandbox.payhere.lk/merchant/refund
+
+POST with:
+
+merchant_id
+
+order_id
+
+refund_amount
+
+reason
+
+hash
+
+⚠️ Refund API requires special permission.
+
+🧪 7️⃣ Sandbox Test Card Details
+
+In sandbox, use:
+
+| Card Number | 4111111111111111 |
+| Expiry | Any future date |
+| CVV | Any 3 digits |
+| OTP | 123456 |
+
+📦 8️⃣ Example Full Sandbox Payment Flow
+
+1️⃣ React Native sends order to backend
+2️⃣ Backend generates hash
+3️⃣ Backend returns payment data
+4️⃣ App opens WebView → sandbox.payhere.lk
+5️⃣ Complete payment
+6️⃣ PayHere sends notify to backend
+7️⃣ Backend verifies md5sig
+8️⃣ Update order as PAID
+
+🧠 Important Security Rule
+
+Always verify:
+
+md5sig === your_generated_signature
+
+Never trust frontend response.
+
+
+
+App ID
+4OVybldjebo4JFnJsgjrRS3Xh
+
+App Secret
+4jo4hFWB2ii8lweNKXjVOk8lxvQ2AqCQg8mz6C2qrhTi 

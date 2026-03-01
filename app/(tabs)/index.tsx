@@ -2,41 +2,38 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import {
-    collection,
-    limit,
-    onSnapshot,
-    query,
-    where,
+  collection,
+  limit,
+  onSnapshot,
+  query,
+  where,
 } from "firebase/firestore";
 import React from "react";
 import {
-    Dimensions,
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  Dimensions,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { BottomNavbar } from "../../components/BottomNavbar";
 import { useSession } from "../../ctx"; // Fixed import path
 import { db } from "../../utils/firebaseConfig"; // Fixed import path
 
 // Theme Colors
 const COLORS = {
-  primary: "#118976",
-  primaryDark: "#0d6e5e",
+  primary: "#10B981",
+  primaryDark: "#059669",
   secondaryBlue: "#3B82F6",
-  surfaceLight: "#FFFFFF",
-  surfaceDark: "#1E1E1E",
-  backgroundLight: "#F8FAFC",
-  backgroundDark: "#0F172A",
-  text: "#1e293b", // slate-800
-  textLight: "#f8fafc",
-  slatemuted: "#64748b", // slate-500
-  emerald50: "#ecfdf5",
-  emerald100: "#d1fae5",
+  inactive: "#94a3b8",
+  surface: "#0f172a",
+  background: "#020617",
+  text: "#f8fafc",
+  textSub: "#94a3b8",
+  border: "#1e293b",
   white: "#ffffff",
 };
 
@@ -48,6 +45,28 @@ export default function ClientDashboard() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [activeRequest, setActiveRequest] = React.useState<any>(null);
   const [recentRequests, setRecentRequests] = React.useState<any[]>([]);
+
+  const dummyServices = [
+    {
+      id: "1",
+      name: "Electrician",
+      icon: "electrical-services",
+      color: "#f97316",
+    },
+    { id: "2", name: "Plumbing", icon: "plumbing", color: "#3b82f6" },
+    { id: "3", name: "AC Repair", icon: "ac-unit", color: "#06b6d4" },
+    { id: "4", name: "Cleaning", icon: "cleaning-services", color: "#a855f7" },
+    { id: "5", name: "Painting", icon: "format-paint", color: "#ec4899" },
+    { id: "6", name: "Carpentry", icon: "handyman", color: "#8b5cf6" },
+    { id: "7", name: "Masonry", icon: "architecture", color: "#14b8a6" },
+    { id: "8", name: "CCTV Installation", icon: "videocam", color: "#ef4444" },
+  ];
+
+  const searchResults = searchQuery
+    ? dummyServices.filter((s) =>
+        s.name.toLowerCase().includes(searchQuery.toLowerCase()),
+      )
+    : [];
 
   // Fetch Data
   React.useEffect(() => {
@@ -97,26 +116,8 @@ export default function ClientDashboard() {
     };
   }, [user?._id]);
 
-  const categories = [
-    { id: 1, name: "Electrical", icon: "lightbulb", color: "#f97316" },
-    { id: 2, name: "Plumbing", icon: "plumbing", color: "#3b82f6" },
-    { id: 3, name: "AC Repair", icon: "ac-unit", color: "#06b6d4" },
-    { id: 4, name: "Cleaning", icon: "cleaning-services", color: "#a855f7" },
-    { id: 5, name: "Painting", icon: "format-paint", color: "#ec4899" },
-  ];
-
-  const filteredCategories = categories.filter((cat) =>
-    cat.name.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
-
   return (
-    <View style={styles.container}>
-      <StatusBar
-        barStyle="light-content"
-        translucent
-        backgroundColor="transparent"
-      />
-
+    <View style={[styles.container, { backgroundColor: COLORS.background }]}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -125,7 +126,7 @@ export default function ClientDashboard() {
         {/* Header Section */}
         <View style={styles.headerContainer}>
           <LinearGradient
-            colors={["#065F46", "#14B8A6"]}
+            colors={["#020617", "#0f172a"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.headerGradient}
@@ -155,14 +156,6 @@ export default function ClientDashboard() {
                   <MaterialIcons name="location-on" size={18} color="white" />
                   <Text style={styles.locationText}>Sri Lanka</Text>
                 </View>
-
-                <TouchableOpacity
-                  style={styles.notificationBtn}
-                  onPress={() => router.push("/notifications")}
-                >
-                  <MaterialIcons name="notifications" size={20} color="white" />
-                  <View style={styles.notificationDot} />
-                </TouchableOpacity>
               </View>
 
               {/* Search Bar */}
@@ -175,6 +168,9 @@ export default function ClientDashboard() {
                   />
                 </View>
                 <TextInput
+                  autoComplete="off"
+                  autoCorrect={false}
+                  spellCheck={false}
                   style={styles.searchInput}
                   placeholder="Find a service (e.g. Electrician)"
                   placeholderTextColor="rgba(209, 250, 229, 0.6)"
@@ -189,46 +185,78 @@ export default function ClientDashboard() {
           </LinearGradient>
         </View>
 
-        {/* Categories Section */}
-        <View style={styles.sectionContainer}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Categories</Text>
-            <TouchableOpacity onPress={() => setSearchQuery("")}>
-              <Text style={styles.seeAllText}>See All</Text>
-            </TouchableOpacity>
-          </View>
-
-          {filteredCategories.length > 0 ? (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.categoriesScroll}
+        {/* Search Results */}
+        {searchQuery.length > 0 && (
+          <View
+            style={[
+              styles.sectionContainer,
+              { marginTop: -10, marginBottom: 20 },
+            ]}
+          >
+            <View
+              style={{
+                backgroundColor: COLORS.surface,
+                borderRadius: 16,
+                padding: 8,
+                borderWidth: 1,
+                borderColor: COLORS.border,
+              }}
             >
-              {filteredCategories.map((cat) => (
-                <TouchableOpacity
-                  key={cat.id}
-                  style={styles.categoryItem}
-                  onPress={() => router.push("/create-request")}
-                >
-                  <View style={styles.categoryIconContainer}>
+              {searchResults.length > 0 ? (
+                searchResults.map((item, index) => (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      padding: 12,
+                      borderBottomWidth:
+                        index < searchResults.length - 1 ? 1 : 0,
+                      borderBottomColor: COLORS.border,
+                    }}
+                    onPress={() => {
+                      setSearchQuery("");
+                      router.push("/create-request");
+                    }}
+                  >
+                    <View
+                      style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 20,
+                        backgroundColor: COLORS.background,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginRight: 12,
+                      }}
+                    >
+                      <MaterialIcons
+                        name={item.icon as any}
+                        size={20}
+                        color={item.color}
+                      />
+                    </View>
+                    <Text style={{ color: COLORS.text, fontSize: 16 }}>
+                      {item.name}
+                    </Text>
                     <MaterialIcons
-                      name={cat.icon as any}
-                      size={28}
-                      color={cat.color}
+                      name="chevron-right"
+                      size={20}
+                      color={COLORS.textSub}
+                      style={{ marginLeft: "auto" }}
                     />
-                  </View>
-                  <Text style={styles.categoryName}>{cat.name}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          ) : (
-            <View style={{ alignItems: "center", padding: 20 }}>
-              <Text style={{ color: COLORS.slatemuted }}>
-                No categories found
-              </Text>
+                  </TouchableOpacity>
+                ))
+              ) : (
+                <View style={{ padding: 20, alignItems: "center" }}>
+                  <Text style={{ color: COLORS.textSub }}>
+                    No services found for "{searchQuery}"
+                  </Text>
+                </View>
+              )}
             </View>
-          )}
-        </View>
+          </View>
+        )}
 
         {/* Active Request Card */}
         {activeRequest && (
@@ -259,7 +287,7 @@ export default function ClientDashboard() {
                     <MaterialIcons
                       name="schedule"
                       size={14}
-                      color={COLORS.slatemuted}
+                      color={COLORS.textSub}
                     />
                     <Text style={styles.requestDetailText}>
                       {activeRequest.scheduledDate}{" "}
@@ -270,7 +298,7 @@ export default function ClientDashboard() {
                     <MaterialIcons
                       name="location-on"
                       size={14}
-                      color={COLORS.slatemuted}
+                      color={COLORS.textSub}
                     />
                     <Text style={styles.requestDetailText} numberOfLines={1}>
                       {activeRequest.address}
@@ -329,7 +357,7 @@ export default function ClientDashboard() {
             {recentRequests.length === 0 ? (
               <Text
                 style={{
-                  color: COLORS.slatemuted,
+                  color: COLORS.textSub,
                   textAlign: "center",
                   marginTop: 10,
                 }}
@@ -343,19 +371,19 @@ export default function ClientDashboard() {
                     <View
                       style={[
                         styles.historyIconBox,
-                        { backgroundColor: "#f1f5f9" },
+                        { backgroundColor: COLORS.border },
                       ]}
                     >
                       <MaterialIcons
                         name="history"
                         size={20}
-                        color={COLORS.slatemuted}
+                        color={COLORS.textSub}
                       />
                     </View>
                     <View>
                       <Text style={styles.historyName}>{item.serviceType}</Text>
                       <Text style={styles.historyDate}>
-                        {item.scheduledDate}
+                        {item.createdAt?.toDate().toLocaleDateString()}
                       </Text>
                     </View>
                   </View>
@@ -368,6 +396,7 @@ export default function ClientDashboard() {
           </View>
         </View>
       </ScrollView>
+      <BottomNavbar />
     </View>
   );
 }
@@ -375,7 +404,7 @@ export default function ClientDashboard() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.backgroundLight,
+    backgroundColor: "#020617",
   },
   scrollView: {
     flex: 1,
@@ -429,7 +458,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   welcomeLabel: {
-    color: COLORS.emerald100,
+    color: COLORS.textSub,
     fontSize: 14,
     fontWeight: "500",
     marginBottom: 4,
@@ -512,10 +541,12 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   filterBtn: {
-    backgroundColor: "white",
+    backgroundColor: "rgba(255,255,255,0.1)",
     padding: 8,
     borderRadius: 12,
     marginLeft: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
   },
   sectionContainer: {
     paddingHorizontal: 24,
@@ -537,42 +568,13 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.primary,
   },
-  categoriesScroll: {
-    paddingRight: 24,
-    gap: 16,
-  },
-  categoryItem: {
-    alignItems: "center",
-    marginRight: 4,
-  },
-  categoryIconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 16,
-    backgroundColor: "white",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: "#f1f5f9",
-  },
-  categoryName: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: "#475569",
-  },
   activeRequestCard: {
-    backgroundColor: "white",
+    backgroundColor: "#0f172a",
     borderRadius: 24,
     padding: 20,
-    borderWidth: 2,
-    borderColor: "rgba(59, 130, 246, 0.1)", // Light blue tint
-    shadowColor: COLORS.secondaryBlue,
+    borderWidth: 1,
+    borderColor: "#1e293b",
+    shadowColor: "rgba(0,0,0,0.3)",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
@@ -583,7 +585,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 0,
     right: 0,
-    backgroundColor: "#eff6ff", // blue-50
+    backgroundColor: "rgba(59, 130, 246, 0.15)",
     paddingHorizontal: 16,
     paddingVertical: 6,
     borderBottomLeftRadius: 16,
@@ -606,12 +608,12 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 16,
-    backgroundColor: "#ecfdf5",
+    backgroundColor: COLORS.border,
     alignItems: "center",
     justifyContent: "center",
     marginRight: 16,
     borderWidth: 1,
-    borderColor: "#d1fae5",
+    borderColor: COLORS.border,
   },
   requestTitle: {
     fontSize: 18,
@@ -626,13 +628,13 @@ const styles = StyleSheet.create({
   },
   requestDetailText: {
     fontSize: 12,
-    color: COLORS.slatemuted,
+    color: COLORS.textSub,
     marginLeft: 4,
     fontWeight: "500",
   },
   progressBarBg: {
     height: 10,
-    backgroundColor: "#f3f4f6",
+    backgroundColor: COLORS.border,
     borderRadius: 5,
     marginBottom: 16,
     overflow: "hidden",
@@ -651,15 +653,15 @@ const styles = StyleSheet.create({
   footerStatusText: {
     fontSize: 12,
     fontWeight: "500",
-    color: COLORS.slatemuted,
+    color: COLORS.textSub,
   },
   viewDetailsBtn: {
-    backgroundColor: "#eff6ff",
+    backgroundColor: COLORS.border,
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "rgba(59, 130, 246, 0.3)",
+    borderColor: COLORS.border,
   },
   viewDetailsText: {
     fontSize: 12,
@@ -692,14 +694,14 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   historyItem: {
-    backgroundColor: "white",
+    backgroundColor: "#0f172a",
     borderRadius: 16,
     padding: 16,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     borderWidth: 1,
-    borderColor: "#f1f5f9",
+    borderColor: "#1e293b",
   },
   historyLeft: {
     flexDirection: "row",
@@ -720,7 +722,7 @@ const styles = StyleSheet.create({
   },
   historyDate: {
     fontSize: 12,
-    color: COLORS.slatemuted,
+    color: COLORS.textSub,
     marginTop: 2,
   },
   historyBadge: {

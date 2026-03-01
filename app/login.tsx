@@ -1,17 +1,13 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { Stack, useRouter } from "expo-router";
-import {
-  ArrowRight,
-  Eye,
-  EyeOff,
-  Hammer,
-  Lock,
-  Mail,
-} from "lucide-react-native";
+
+import { ArrowLeft, ArrowRight, Eye, EyeOff } from "lucide-react-native";
 import React, { useState } from "react";
 import {
   Alert,
-  SafeAreaView,
+  Animated,
+  Image,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -19,18 +15,20 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 // Theme Colors based on user provided config
 const COLORS = {
-  primary: "#13ec5b",
-  primaryDark: "#0ea640",
-  backgroundLight: "#ffffff",
-  backgroundDark: "#102216",
-  surfaceLight: "#f9fafb",
-  surfaceDark: "#1c2e22",
-  textMain: "#111827", // gray-900
-  textSub: "#6b7280", // gray-500
-  border: "#e5e7eb", // gray-200
+  primary: "#10B981",
+  primaryDark: "#059669",
+  background: "#020617",
+  surface: "#0f172a",
+  textMain: "#f8fafc",
+  textSub: "#94a3b8",
+  border: "#1e293b",
   white: "#ffffff",
 };
 
@@ -64,6 +62,8 @@ import { useSession } from "../ctx";
 export default function LoginScreen() {
   const router = useRouter();
   const { signIn } = useSession();
+  const insets = useSafeAreaInsets();
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -71,6 +71,18 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [activeField, setActiveField] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const buttonScale = React.useRef(new Animated.Value(1)).current;
+  const forgotScale = React.useRef(new Animated.Value(1)).current;
+  const signupScale = React.useRef(new Animated.Value(1)).current;
+
+  const animateValue = (ref: Animated.Value, toValue: number) => {
+    Animated.spring(ref, {
+      toValue,
+      useNativeDriver: true,
+      tension: 100,
+      friction: 5,
+    }).start();
+  };
 
   const handleLogin = async () => {
     if (!formData.email || !formData.password) {
@@ -93,23 +105,32 @@ export default function LoginScreen() {
     <SafeAreaView style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: insets.bottom + 40 },
+        ]}
         showsVerticalScrollIndicator={false}
       >
+        {/* Back Button */}
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <ArrowLeft size={24} color={COLORS.textSub} />
+        </TouchableOpacity>
         {/* Header Section */}
         <View style={styles.header}>
           {/* Logo */}
-          <LinearGradient
-            colors={["#13ec5b", "#0c8a35"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.logoContainer}
-          >
-            <Hammer size={36} color="white" />
-          </LinearGradient>
+          <View style={styles.logoContainer}>
+            <Image
+              source={require("../assets/images/logo.png")}
+              style={{ width: "100%", height: "100%", borderRadius: 24 }}
+              resizeMode="contain"
+            />
+          </View>
 
           {/* App Name & Tagline */}
-          <Text style={styles.appName}>FixMate Lanka</Text>
+          <Text style={styles.appName}>Fix Mate</Text>
           <Text style={styles.tagline}>Welcome Back</Text>
         </View>
 
@@ -120,16 +141,13 @@ export default function LoginScreen() {
           <View style={styles.inputsWrapper}>
             {/* Email */}
             <View style={styles.inputContainer}>
-              <View style={styles.inputIcon}>
-                <Mail size={20} color={COLORS.textSub} />
-              </View>
-              <TextInput
+              <TextInput autoComplete='off' autoCorrect={false} spellCheck={false}
                 style={[
                   styles.input,
                   activeField === "email" && styles.inputActive,
                 ]}
                 placeholder="Email Address"
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={COLORS.textSub}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 value={formData.email}
@@ -143,17 +161,14 @@ export default function LoginScreen() {
 
             {/* Password */}
             <View style={styles.inputContainer}>
-              <View style={styles.inputIcon}>
-                <Lock size={20} color={COLORS.textSub} />
-              </View>
-              <TextInput
+              <TextInput autoComplete='off' autoCorrect={false} spellCheck={false}
                 style={[
                   styles.input,
                   activeField === "password" && styles.inputActive,
-                  { paddingRight: 44 },
+                  { paddingRight: 56 },
                 ]}
                 placeholder="Password"
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={COLORS.textSub}
                 secureTextEntry={!showPassword}
                 value={formData.password}
                 onChangeText={(text) =>
@@ -174,40 +189,62 @@ export default function LoginScreen() {
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity style={styles.forgotPassword}>
-              <Text style={styles.linkText}>Forgot Password?</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.buttonWrapper}
-              activeOpacity={0.9}
-              onPress={handleLogin}
-              disabled={loading}
-            >
-              <LinearGradient
-                colors={["#13ec5b", "#0c8a35"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={[styles.button, loading && { opacity: 0.7 }]}
+            <Animated.View style={{ transform: [{ scale: forgotScale }] }}>
+              <TouchableOpacity
+                style={styles.forgotPassword}
+                onPressIn={() => animateValue(forgotScale, 0.95)}
+                onPressOut={() => animateValue(forgotScale, 1)}
               >
-                <Text style={styles.buttonText}>
-                  {loading ? "Logging In..." : "Log In"}
-                </Text>
-                {!loading && <ArrowRight size={20} color="white" />}
-              </LinearGradient>
-            </TouchableOpacity>
+                <Text style={styles.linkText}>Forgot Password?</Text>
+              </TouchableOpacity>
+            </Animated.View>
+
+            <Animated.View
+              style={[
+                styles.buttonWrapper,
+                { transform: [{ scale: buttonScale }] },
+              ]}
+            >
+              <Pressable
+                onPress={handleLogin}
+                onPressIn={() => animateValue(buttonScale, 0.96)}
+                onPressOut={() => animateValue(buttonScale, 1)}
+                disabled={loading}
+              >
+                <LinearGradient
+                  colors={[COLORS.primary, COLORS.primaryDark]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={[styles.button, loading && { opacity: 0.7 }]}
+                >
+                  <Text style={styles.buttonText}>
+                    {loading ? "Logging In..." : "Log In"}
+                  </Text>
+                  {!loading && <ArrowRight size={20} color="white" />}
+                </LinearGradient>
+              </Pressable>
+            </Animated.View>
           </View>
 
           {/* Footer */}
           <View style={styles.footer}>
             <Text style={styles.footerText}>
               Don't have an account?{" "}
-              <Text
-                style={styles.linkText}
-                onPress={() => router.push("/signup")}
+              <Animated.View
+                style={{
+                  transform: [{ scale: signupScale }],
+                  marginBottom: -4,
+                }}
               >
-                Sign Up
-              </Text>
+                <Text
+                  style={styles.linkText}
+                  onPress={() => router.push("/signup")}
+                  onPressIn={() => animateValue(signupScale, 0.95)}
+                  onPressOut={() => animateValue(signupScale, 1)}
+                >
+                  Sign Up
+                </Text>
+              </Animated.View>
             </Text>
           </View>
         </View>
@@ -219,13 +256,20 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.backgroundLight,
+    backgroundColor: COLORS.background,
   },
   scrollContent: {
     paddingHorizontal: 24,
     paddingTop: 48,
     paddingBottom: 40,
     alignItems: "center",
+  },
+  backButton: {
+    alignSelf: "flex-start",
+    marginBottom: 10,
+    padding: 8,
+    borderRadius: 12,
+    backgroundColor: COLORS.surface,
   },
   header: {
     alignItems: "center",
@@ -276,11 +320,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     height: 48,
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
     borderColor: COLORS.border,
-    borderRadius: 8,
-    paddingHorizontal: 15,
+    borderRadius: 12,
+    position: "relative",
   },
   inputActive: {
     borderColor: COLORS.primary,
@@ -291,7 +335,8 @@ const styles = StyleSheet.create({
     height: "100%",
     fontSize: 15,
     color: COLORS.textMain,
-    paddingLeft: 32,
+    paddingLeft: 16,
+    paddingRight: 16,
   },
   inputIconRight: {
     marginLeft: 10,
@@ -303,14 +348,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: "center",
     paddingHorizontal: 16,
-  },
-  inputIcon: {
-    position: "absolute",
-    left: 16,
-    top: 0,
-    bottom: 0,
-    justifyContent: "center",
-    zIndex: 1,
   },
   forgotPassword: {
     alignSelf: "flex-end",

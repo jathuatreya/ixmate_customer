@@ -1,59 +1,58 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import {
-    ArrowLeft,
-    Bell,
-    CheckCheck,
-    Loader2,
-    MessageSquare,
-    MessageSquarePlus,
-    MoreVertical,
-    Phone,
-    Plus,
-    Search,
-    Send,
-    Smile,
+  ArrowLeft,
+  Bell,
+  CheckCheck,
+  Loader2,
+  MessageSquare,
+  MessageSquarePlus,
+  MoreVertical,
+  Phone,
+  Plus,
+  Search,
+  Send,
+  Smile,
 } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
-    Dimensions,
-    Image,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Dimensions,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { BottomNavbar } from "../../components/BottomNavbar";
 
 // Theme Colors
 const COLORS = {
-  primary: "#118A7E", // Brand Teal
-  secondary: "#0E7490", // Brand Cyan
-  secondaryDark: "#0e7066",
-  backgroundLight: "#F8FAFC",
-  surfaceLight: "#ffffff",
-  surfaceDark: "#1E293B",
-  borderLight: "#e2e8f0",
-  textMain: "#1e293b",
-  textSub: "#64748b",
+  primary: "#10B981",
+  secondary: "#3B82F6",
+  secondaryDark: "#1D4ED8",
+  background: "#020617",
+  surface: "#0f172a",
+  border: "#1e293b",
+  textMain: "#f8fafc",
+  textSub: "#94a3b8",
   white: "#FFFFFF",
-  chatBubbleReceiver: "#ffffff",
-  chatBubbleSender: "#118A7E",
+  chatBubbleReceiver: "#1e293b",
+  chatBubbleSender: "#10B981",
 };
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 
 import {
-    Conversation,
-    listenToConversations,
-    listenToMessages,
-    Message,
-    sendMessage,
+  Conversation,
+  listenToConversations,
+  listenToMessages,
+  Message,
+  sendMessage,
 } from "../../services/chatService";
 import { auth } from "../../utils/firebaseConfig";
 
@@ -87,7 +86,7 @@ export default function InboxScreen() {
         <View style={styles.searchContainer}>
           <View style={styles.searchBar}>
             <Search size={20} color="#9ca3af" />
-            <TextInput
+            <TextInput autoComplete='off' autoCorrect={false} spellCheck={false}
               style={styles.searchInput}
               placeholder="Search conversations..."
               placeholderTextColor="#9ca3af"
@@ -313,7 +312,7 @@ export default function InboxScreen() {
     };
 
     return (
-      <View style={{ flex: 1, backgroundColor: COLORS.backgroundLight }}>
+      <View style={{ flex: 1, backgroundColor: COLORS.background }}>
         {/* Detail Header */}
         <View style={styles.detailHeader}>
           <TouchableOpacity
@@ -449,7 +448,7 @@ export default function InboxScreen() {
               </TouchableOpacity>
 
               <View style={styles.textInputWrapper}>
-                <TextInput
+                <TextInput autoComplete='off' autoCorrect={false} spellCheck={false}
                   style={styles.textInput}
                   placeholder="Type a message..."
                   placeholderTextColor="#9ca3af"
@@ -481,13 +480,6 @@ export default function InboxScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor={
-          currentConversation ? COLORS.white : COLORS.backgroundLight
-        }
-      />
-
       {!currentConversation ? (
         <>
           {/* Main Header */}
@@ -496,19 +488,13 @@ export default function InboxScreen() {
               <Text style={styles.headerTitle}>Chats</Text>
               <Text style={styles.headerSubtitle}>Professional Support</Text>
             </View>
-            <TouchableOpacity
-              style={styles.notifBtn}
-              onPress={() => router.push("/notifications")}
-            >
-              <Bell size={24} color={COLORS.textMain} />
-              <View style={styles.notifDot} />
-            </TouchableOpacity>
           </View>
           <ChatList />
         </>
       ) : (
         <ChatDetail conversation={currentConversation} />
       )}
+      <BottomNavbar />
     </SafeAreaView>
   );
 }
@@ -516,7 +502,7 @@ export default function InboxScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.backgroundLight,
+    backgroundColor: "#020617",
   },
   // --- Main Header ---
   mainHeader: {
@@ -525,7 +511,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: COLORS.backgroundLight,
+    backgroundColor: COLORS.background,
   },
   headerTitle: {
     fontSize: 24,
@@ -552,7 +538,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: "#ef4444",
     borderWidth: 1.5,
-    borderColor: COLORS.backgroundLight,
+    borderColor: COLORS.background,
   },
   // --- Chat List Component ---
   searchContainer: {
@@ -562,13 +548,13 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.surface,
     paddingHorizontal: 12,
     height: 48,
     borderRadius: 16,
     gap: 8,
     borderWidth: 1,
-    borderColor: COLORS.borderLight,
+    borderColor: COLORS.border,
   },
   searchInput: {
     flex: 1,
@@ -594,8 +580,8 @@ const styles = StyleSheet.create({
     borderColor: COLORS.primary,
   },
   filterTabInactive: {
-    backgroundColor: COLORS.white,
-    borderColor: COLORS.borderLight,
+    backgroundColor: COLORS.surface,
+    borderColor: COLORS.border,
   },
   filterText: {
     fontSize: 14,
@@ -642,7 +628,7 @@ const styles = StyleSheet.create({
     height: 14,
     backgroundColor: COLORS.secondary,
     borderWidth: 2,
-    borderColor: COLORS.backgroundLight,
+    borderColor: COLORS.background,
     borderRadius: 7,
   },
   chatInfo: {
@@ -710,9 +696,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.surface,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.borderLight,
+    borderBottomColor: COLORS.border,
   },
   backBtn: {
     padding: 8,
@@ -843,7 +829,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     backgroundColor: COLORS.white,
     borderTopWidth: 1,
-    borderTopColor: COLORS.borderLight,
+    borderTopColor: COLORS.border,
   },
   inputRow: {
     flexDirection: "row",

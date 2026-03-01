@@ -2,10 +2,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import {
   ArrowLeft,
-  Bell,
-  Calendar,
   CheckCheck,
-  Home,
   Loader2,
   MessageSquare,
   MessageSquarePlus,
@@ -15,7 +12,6 @@ import {
   Search,
   Send,
   Smile,
-  User
 } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
@@ -24,7 +20,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  StatusBar,
   StyleSheet,
   Text,
   TextInput,
@@ -51,6 +46,7 @@ const COLORS = {
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 
+import { BottomNavbar } from "../components/BottomNavbar";
 import {
   Conversation,
   listenToConversations,
@@ -90,7 +86,7 @@ export default function ChatScreen() {
         <View style={styles.searchContainer}>
           <View style={styles.searchBar}>
             <Search size={20} color="#9ca3af" />
-            <TextInput
+            <TextInput autoComplete='off' autoCorrect={false} spellCheck={false}
               style={styles.searchInput}
               placeholder="Search conversations..."
               placeholderTextColor="#9ca3af"
@@ -280,40 +276,7 @@ export default function ChatScreen() {
         </TouchableOpacity>
 
         {/* Main Bottom Nav */}
-        <View style={styles.bottomBar}>
-          <TouchableOpacity
-            onPress={() => router.push("/client-home")}
-            style={styles.navItem}
-          >
-            <Home size={24} color={COLORS.textSub} />
-            <Text style={styles.navLabel}>Home</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem}>
-            <MessageSquare size={24} color={COLORS.primary} />
-            <Text
-              style={[
-                styles.navLabel,
-                { color: COLORS.primary, fontWeight: "600" },
-              ]}
-            >
-              Chat
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => router.push("/my-requests")}
-            style={styles.navItem}
-          >
-            <Calendar size={24} color={COLORS.textSub} />
-            <Text style={styles.navLabel}>Bookings</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => router.push("/profile")}
-            style={styles.navItem}
-          >
-            <User size={24} color={COLORS.textSub} />
-            <Text style={styles.navLabel}>Profile</Text>
-          </TouchableOpacity>
-        </View>
+        <BottomNavbar />
       </View>
     );
   };
@@ -360,8 +323,7 @@ export default function ChatScreen() {
             style={styles.backBtn}
           >
             <ArrowLeft size={24} color={COLORS.textSub} />
-          </TouchableOpacity>
-
+          </TouchableOpacity>{" "}
           <View style={styles.headerAvatarContainer}>
             <Image
               source={{
@@ -373,7 +335,6 @@ export default function ChatScreen() {
             />
             <View style={styles.headerOnlineDot} />
           </View>
-
           <View style={{ flex: 1, marginLeft: 12 }}>
             <View
               style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
@@ -383,7 +344,6 @@ export default function ChatScreen() {
             </View>
             <Text style={styles.headerStatus}>{details.role}</Text>
           </View>
-
           <View style={styles.headerActions}>
             <TouchableOpacity
               style={[
@@ -488,7 +448,7 @@ export default function ChatScreen() {
               </TouchableOpacity>
 
               <View style={styles.textInputWrapper}>
-                <TextInput
+                <TextInput autoComplete='off' autoCorrect={false} spellCheck={false}
                   style={styles.textInput}
                   placeholder="Type a message..."
                   placeholderTextColor="#9ca3af"
@@ -519,35 +479,15 @@ export default function ChatScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor={
-          currentConversation ? COLORS.white : COLORS.backgroundLight
-        }
-      />
-
+    <SafeAreaView style={styles.container} edges={["left", "right"]}>
       {!currentConversation ? (
         <>
-          {/* Main Header */}
-          <View style={styles.mainHeader}>
-            <View>
-              <Text style={styles.headerTitle}>Chats</Text>
-              <Text style={styles.headerSubtitle}>Professional Support</Text>
-            </View>
-            <TouchableOpacity
-              style={styles.notifBtn}
-              onPress={() => router.push("/notifications")}
-            >
-              <Bell size={24} color={COLORS.textMain} />
-              <View style={styles.notifDot} />
-            </TouchableOpacity>
-          </View>
           <ChatList />
         </>
       ) : (
         <ChatDetail conversation={currentConversation} />
       )}
+      {!currentConversation && <BottomNavbar />}
     </SafeAreaView>
   );
 }
@@ -592,6 +532,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#ef4444",
     borderWidth: 1.5,
     borderColor: COLORS.backgroundLight,
+  },
+  headerBackBtn: {
+    padding: 4,
+    borderRadius: 12,
+    backgroundColor: "rgba(0,0,0,0.05)",
   },
   // --- Chat List Component ---
   searchContainer: {
