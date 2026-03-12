@@ -8,7 +8,7 @@ import {
   updateProfile,
   type Auth,
 } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { db, auth as firebaseAuth } from "./utils/firebaseConfig"; // Rename import to avoid conflict
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -21,6 +21,9 @@ type User = {
   email: string;
   role: string;
   phoneNumber?: string;
+  address?: string;
+  city?: string;
+  district?: string;
   token?: string; // Not needed for Firebase but keeping for type compatibility if used elsewhere
 };
 
@@ -106,10 +109,42 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        const mappedUser = mapUser(firebaseUser);
-        setUser(mappedUser);
-        // Persist to cache
-        await AsyncStorage.setItem(USER_CACHE_KEY, JSON.stringify(mappedUser));
+        try {
+          const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            
+            // SECURITY CHECK: Only allow customers
+            if (userData.role !== "customer") {
+              await firebaseSignOut(auth);
+              setUser(null);
+              await AsyncStorage.removeItem(USER_CACHE_KEY);
+              setIsLoading(false);
+              return;
+            }
+
+            const mappedUser: User = {
+              _id: firebaseUser.uid,
+              name: userData.displayName || firebaseUser.displayName || "User",
+              email: firebaseUser.email || "",
+              role: userData.role,
+              phoneNumber: userData.phoneNumber || firebaseUser.phoneNumber || undefined,
+              address: userData.address || undefined,
+              city: userData.city || undefined,
+              district: userData.district || undefined,
+            };
+            setUser(mappedUser);
+            // Persist to cache
+            await AsyncStorage.setItem(USER_CACHE_KEY, JSON.stringify(mappedUser));
+          } else {
+            // No profile found, force logout
+            await firebaseSignOut(auth);
+            setUser(null);
+          }
+        } catch (error) {
+          console.error("Error fetching user role:", error);
+          setUser(null);
+        }
       } else {
         setUser(null);
         await AsyncStorage.removeItem(USER_CACHE_KEY);
@@ -124,7 +159,20 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      // Immediate role verification
+      const userDoc = await getDoc(doc(db, "users", userCredential.user.uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        if (userData.role !== "customer") {
+          await firebaseSignOut(auth);
+          throw new Error("Access Denied: You do not have permission to access the customer app.");
+        }
+      } else {
+        await firebaseSignOut(auth);
+        throw new Error("No user profile found. Please register as a customer.");
+      }
     } catch (error: any) {
       console.error("Sign in error", error.message);
       throw new Error(error.message || "Login failed");

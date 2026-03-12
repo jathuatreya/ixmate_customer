@@ -753,6 +753,18 @@ export default function RequestStatusScreen() {
 
         {/* Footer Buttons */}
         <View style={styles.footerButtons}>
+          {request.status === "paid" && (
+            <View style={styles.paidSuccessCard}>
+              <MaterialIcons name="check-circle" size={32} color={COLORS.primary} />
+              <View>
+                <Text style={styles.paidText}>Payment Received</Text>
+                <Text style={{ color: COLORS.textSub, fontSize: 13 }}>
+                  LKR {Number(request.paidAmount || 0).toFixed(2)} processed successfully
+                </Text>
+              </View>
+            </View>
+          )}
+
           {request.status === "completed" && (
             <TouchableOpacity
               activeOpacity={0.9}
@@ -762,7 +774,7 @@ export default function RequestStatusScreen() {
                   pathname: "/payment",
                   params: {
                     id: request.id,
-                    amount: request.budget || "5000", // Defaulting if not present
+                    amount: request.budget || "5000",
                     serviceType: request.serviceType,
                   },
                 })
@@ -1335,8 +1347,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   cancelBtnText: {
-    color: COLORS.red500,
+    color: COLORS.red500 || "#ef4444",
     fontSize: 14,
+    fontWeight: "bold",
+  },
+  paidSuccessCard: {
+    backgroundColor: "rgba(16, 185, 129, 0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(16, 185, 129, 0.3)",
+    borderRadius: 16,
+    padding: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+    marginBottom: 20,
+  },
+  paidText: {
+    color: "#10B981",
+    fontSize: 18,
     fontWeight: "bold",
   },
 });

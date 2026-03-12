@@ -50,6 +50,7 @@ export default function PaymentScreen() {
   const [expiry, setExpiry] = useState("");
   const [cvv, setCvv] = useState("");
   const [otp, setOtp] = useState("");
+  const [amountInput, setAmountInput] = useState(amount?.toString() || "");
 
   const formattedAmount = Number(amount || 0).toFixed(2);
 
@@ -82,18 +83,46 @@ export default function PaymentScreen() {
 
     setLoading(true);
     try {
+      const finalAmount = parseFloat(amountInput) || 0;
+      
       if (id) {
+        // Update request status
         await updateDoc(doc(db, "requests", id as string), {
           status: "paid",
+          paidAmount: finalAmount,
+          paymentDate: new Date(),
+        });
+
+        // Store payment record in db
+        const { addDoc, collection } = await import("firebase/firestore");
+        await addDoc(collection(db, "payments"), {
+          requestId: id,
+          jobId: id, // Adding jobId as requested
+          userId: user?._id || "guest",
+          amount: finalAmount,
+          serviceType: serviceType || "FixMate Service",
+          paymentMethod: "card",
+          timestamp: new Date(),
+          cardLast4: cardNumber.slice(-4),
         });
       }
-      setTimeout(() => {
-        setLoading(false);
-        router.push({
-          pathname: "/booking-success",
-          params: { id: id as string, method: "instant" },
-        });
-      }, 1000);
+
+      setLoading(false);
+      Alert.alert(
+        "Payment Received!",
+        `LKR ${finalAmount.toFixed(2)} has been successfully processed.`,
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              router.push({
+                pathname: "/payment-success",
+                params: { id: id as string, amount: finalAmount.toString() },
+              });
+            },
+          },
+        ]
+      );
     } catch (error: any) {
       Alert.alert("Error", error.message);
       setLoading(false);
@@ -135,11 +164,22 @@ export default function PaymentScreen() {
                 ? THEME_COLORS.surface
                 : COLORS.primaryDark,
               borderColor: THEME_COLORS.border,
+              paddingBottom: 20,
             },
           ]}
         >
-          <Text style={styles.summaryLabel}>Amount to Pay</Text>
-          <Text style={styles.summaryAmount}>LKR {formattedAmount}</Text>
+          <Text style={styles.summaryLabel}>Total Amount (LKR)</Text>
+          <TextInput autoComplete='off' autoCorrect={false} spellCheck={false}
+            style={[
+              styles.amountInput,
+              { color: "white" }
+            ]}
+            value={amountInput}
+            onChangeText={setAmountInput}
+            keyboardType="numeric"
+            placeholder="0.00"
+            placeholderTextColor="rgba(255,255,255,0.5)"
+          />
           <Text style={styles.summaryService}>
             {serviceType || "FixMate Service"}
           </Text>
@@ -381,4 +421,11 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   payBtnText: { color: "white", fontSize: 16, fontWeight: "bold" },
+  amountInput: {
+    fontSize: 36,
+    fontWeight: "bold",
+    textAlign: "center",
+    width: "100%",
+    paddingVertical: 10,
+  },
 });

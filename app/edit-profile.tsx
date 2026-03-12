@@ -42,6 +42,8 @@ export default function EditProfileScreen() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [district, setDistrict] = useState("");
 
   useEffect(() => {
     if (!user?._id) return;
@@ -54,6 +56,8 @@ export default function EditProfileScreen() {
           setName(data.displayName || "");
           setPhone(data.phoneNumber || "");
           setAddress(data.address || "");
+          setCity(data.city || "");
+          setDistrict(data.district || "");
         }
       } catch (error) {
         console.error("Error fetching user:", error);
@@ -78,6 +82,8 @@ export default function EditProfileScreen() {
           displayName: name,
           phoneNumber: phone,
           address: address,
+          city: city,
+          district: district,
         });
         Alert.alert("Success", "Profile updated successfully");
         router.back();
@@ -196,7 +202,7 @@ export default function EditProfileScreen() {
                 style={[
                   styles.input,
                   {
-                    height: 100,
+                    height: 80,
                     textAlignVertical: "top",
                     color: THEME_COLORS.textMain,
                     backgroundColor: THEME_COLORS.background,
@@ -205,10 +211,52 @@ export default function EditProfileScreen() {
                 ]}
                 value={address}
                 onChangeText={setAddress}
-                placeholder="Enter your address"
+                placeholder="Street address"
                 placeholderTextColor={THEME_COLORS.textSub}
                 multiline
               />
+            </View>
+
+            <View style={{ flexDirection: "row", gap: 16 }}>
+              <View style={[styles.inputWrapper, { flex: 1 }]}>
+                <Text style={[styles.label, { color: THEME_COLORS.textSub }]}>
+                  City
+                </Text>
+                <TextInput autoComplete='off' autoCorrect={false} spellCheck={false}
+                  style={[
+                    styles.input,
+                    {
+                      color: THEME_COLORS.textMain,
+                      backgroundColor: THEME_COLORS.background,
+                      borderColor: THEME_COLORS.border,
+                    },
+                  ]}
+                  value={city}
+                  onChangeText={setCity}
+                  placeholder="e.g. Vavuniya"
+                  placeholderTextColor={THEME_COLORS.textSub}
+                />
+              </View>
+
+              <View style={[styles.inputWrapper, { flex: 1 }]}>
+                <Text style={[styles.label, { color: THEME_COLORS.textSub }]}>
+                  District
+                </Text>
+                <TextInput autoComplete='off' autoCorrect={false} spellCheck={false}
+                  style={[
+                    styles.input,
+                    {
+                      color: THEME_COLORS.textMain,
+                      backgroundColor: THEME_COLORS.background,
+                      borderColor: THEME_COLORS.border,
+                    },
+                  ]}
+                  value={district}
+                  onChangeText={setDistrict}
+                  placeholder="e.g. Vavuniya"
+                  placeholderTextColor={THEME_COLORS.textSub}
+                />
+              </View>
             </View>
           </View>
 

@@ -106,7 +106,7 @@ export default function ProfileScreen() {
             <View style={styles.tag}>
               <MaterialIcons name="location-on" size={14} color="white" />
               <Text style={styles.tagText}>
-                {userData?.address || "No Address"}
+                {userData?.city ? `${userData.city}, ${userData.district || ""}` : (userData?.address || "No Location")}
               </Text>
             </View>
           </View>

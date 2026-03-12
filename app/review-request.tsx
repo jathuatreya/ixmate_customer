@@ -94,9 +94,15 @@ export default function ReviewRequestScreen() {
 
     setSubmitting(true);
     try {
+      // Clean requestData of undefined values
+      const sanitizedData = Object.entries(requestData).reduce((acc: any, [key, value]) => {
+        if (value !== undefined) acc[key] = value;
+        return acc;
+      }, {});
+
       // Save to Firestore
       const docRef = await addDoc(collection(db, "requests"), {
-        ...requestData,
+        ...sanitizedData,
         userId: user?._id || "guest",
         paymentMethod,
         status:
@@ -121,8 +127,26 @@ export default function ReviewRequestScreen() {
           },
         });
         // Remove clearing state here, clear only on successful payment or home transition
+      } else if (paymentMethod === "saved_card") {
+        // Record payment for saved card
+        await addDoc(collection(db, "payments"), {
+          requestId: requestId,
+          jobId: requestId,
+          userId: user?._id || "guest",
+          amount: parseFloat(requestData.budget || "0"),
+          serviceType: requestData.serviceType || "FixMate Service",
+          paymentMethod: "saved_card",
+          timestamp: new Date(),
+          cardLast4: savedCard?.last4 || "0000",
+        });
+
+        // Navigate to Payment Success Screen
+        router.push({
+          pathname: "/payment-success",
+          params: { id: requestId, amount: requestData.budget },
+        });
       } else {
-        // Navigate to Success Screen
+        // Navigate to Booking Success Screen (Cash)
         router.push({
           pathname: "/booking-success",
           params: { id: requestId, method: paymentMethod },
@@ -243,6 +267,18 @@ export default function ReviewRequestScreen() {
                   style={[styles.detailValue, { textTransform: "capitalize" }]}
                 >
                   {requestData.urgency || "Normal"}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.detailsRow}>
+              <View style={styles.detailItem}>
+                <View style={styles.detailLabelRow}>
+                  <ShieldCheck size={14} color={COLORS.textSub} />
+                  <Text style={styles.detailLabel}>Assigned Professional</Text>
+                </View>
+                <Text style={[styles.detailValue, !requestData.workerName && { color: COLORS.primary }]}>
+                  {requestData.workerName || "Open for Bidding (Auto-Match)"}
                 </Text>
               </View>
             </View>

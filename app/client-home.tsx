@@ -457,11 +457,28 @@ export default function ClientDashboard() {
                       </Text>
                     </View>
                   </View>
-                  <View style={styles.historyBadge}>
+                  <View
+                    style={[
+                      styles.historyBadge,
+                      {
+                        backgroundColor:
+                          item.status?.toLowerCase() === "completed"
+                            ? COLORS.primary
+                            : "transparent",
+                        borderWidth:
+                          item.status?.toLowerCase() === "completed" ? 0 : 0, // already in style or handled by parent
+                      },
+                    ]}
+                  >
                     <Text
                       style={[
                         styles.historyBadgeText,
-                        { color: COLORS.primary },
+                        {
+                          color:
+                            item.status?.toLowerCase() === "completed"
+                              ? "white"
+                              : COLORS.primary,
+                        },
                       ]}
                     >
                       {item.status}

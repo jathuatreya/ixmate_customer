@@ -331,6 +331,29 @@ export default function MyRequestsScreen() {
                     <Text style={styles.btnPrimaryText}>Chat</Text>
                   </TouchableOpacity>
                 )}
+                {item.status?.toLowerCase() === "completed" && (
+                  <TouchableOpacity
+                    style={styles.btnPrimary}
+                    onPress={() => 
+                      router.push({
+                        pathname: "/payment",
+                        params: {
+                          id: item.id,
+                          amount: item.budget || "5000",
+                          serviceType: item.serviceType,
+                        },
+                      })
+                    }
+                  >
+                    <MaterialIcons
+                      name="payment"
+                      size={18}
+                      color="white"
+                      style={{ marginRight: 4 }}
+                    />
+                    <Text style={styles.btnPrimaryText}>Pay Now</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             </TouchableOpacity>
           ))}

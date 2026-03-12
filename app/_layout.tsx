@@ -9,7 +9,6 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import "react-native-reanimated";
 
-import { useColorScheme } from "@/hooks/use-color-scheme";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { RequestProvider } from "../contexts/RequestContext";
 import { ThemeProvider, useTheme } from "../contexts/ThemeContext";
@@ -65,31 +64,31 @@ function RootLayoutNav() {
       <Stack.Screen name="review-request" options={{ headerShown: false }} />
       <Stack.Screen
         name="available-workers"
-        options={{ headerShown: true, title: "Select Professional" }}
+        options={{ headerShown: false, title: "Select Professional" }}
       />
       <Stack.Screen
         name="payment"
-        options={{ headerShown: true, title: "Payment" }}
+        options={{ headerShown: false, title: "Payment" }}
       />
       <Stack.Screen
         name="request-status"
-        options={{ headerShown: true, title: "Booking Status" }}
+        options={{ headerShown: false, title: "Booking Status" }}
       />
       <Stack.Screen
         name="rate-experience"
-        options={{ headerShown: true, title: "Rate Service" }}
+        options={{ headerShown: false, title: "Rate Service" }}
       />
       <Stack.Screen
         name="profile"
-        options={{ headerShown: true, title: "Profile" }}
+        options={{ headerShown: false, title: "Profile" }}
       />
       <Stack.Screen
         name="my-requests"
-        options={{ headerShown: true, title: "My Requests" }}
+        options={{ headerShown: false, title: "My Requests" }}
       />
       <Stack.Screen
         name="chat"
-        options={{ headerShown: true, title: "Messages" }}
+        options={{ headerShown: false, title: "Messages" }}
       />
       <Stack.Screen name="client-home" options={{ headerShown: false }} />
       <Stack.Screen name="+not-found" />

@@ -24,6 +24,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { BottomNavbar } from "../components/BottomNavbar";
 import { useRequest } from "../contexts/RequestContext";
+import { useSession } from "../ctx";
 
 const COLORS = {
   primary: "#10B981",
@@ -42,8 +43,14 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 export default function RequestLocationScreen() {
   const router = useRouter();
   const { requestData, setRequestData } = useRequest();
+  const { user } = useSession();
 
-  const [address, setAddress] = useState(requestData.address || "");
+  const [address, setAddress] = useState(
+    requestData.address ||
+      (user?.address
+        ? `${user.address}${user.city ? ", " + user.city : ""}${user.district ? ", " + user.district : ""}`
+        : ""),
+  );
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [isDateSelected, setIsDateSelected] = useState(
