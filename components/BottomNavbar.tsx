@@ -1,6 +1,7 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { usePathname, useRouter } from "expo-router";
 import React from "react";
+import { useRequest } from "../contexts/RequestContext";
 import {
   Platform,
   StyleSheet,
@@ -16,6 +17,7 @@ export const BottomNavbar = () => {
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
+  const { clearRequestData } = useRequest();
   const THEME_COLORS = getColors(theme);
   const isDark = theme === "dark";
 
@@ -121,7 +123,10 @@ export const BottomNavbar = () => {
       ) && (
         <TouchableOpacity
           style={styles.centerNavContainer}
-          onPress={() => router.push("/create-request")}
+          onPress={() => {
+            clearRequestData();
+            router.push("/create-request");
+          }}
         >
           <View
             style={[

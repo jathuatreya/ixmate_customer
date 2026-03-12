@@ -14,16 +14,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { BottomNavbar } from "../components/BottomNavbar";
 import { getColors, useTheme } from "../contexts/ThemeContext";
 
-const DISTRICTS = [
-  "All",
-  "Colombo",
-  "Gampaha",
-  "Kandy",
-  "Galle",
-  "Jaffna",
-  "Matara",
-  "Kurunegala",
-];
+import { SRI_LANKA_DISTRICTS } from "../constants/Districts";
+
+const DISTRICTS = ["All", ...SRI_LANKA_DISTRICTS];
 
 const DUMMY_WORKERS = Array.from({ length: 20 }, (_, i) => ({
   id: `${i + 1}`,

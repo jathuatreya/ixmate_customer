@@ -43,7 +43,7 @@ export default function PaymentScreen() {
   const THEME_COLORS = getColors(theme);
   const isDark = theme === "dark";
   const { user } = useSession();
-  const { id, amount, serviceType } = useLocalSearchParams();
+  const { id, amount, serviceType, workerId } = useLocalSearchParams();
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1); // 1: Card Info, 2: OTP
   const [cardNumber, setCardNumber] = useState("");
@@ -97,7 +97,9 @@ export default function PaymentScreen() {
         const { addDoc, collection } = await import("firebase/firestore");
         await addDoc(collection(db, "payments"), {
           requestId: id,
-          jobId: id, // Adding jobId as requested
+          jobId: id,
+          workerId: workerId || null,
+          status: "completed",
           userId: user?._id || "guest",
           amount: finalAmount,
           serviceType: serviceType || "FixMate Service",

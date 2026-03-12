@@ -3,9 +3,9 @@ import { useRouter } from "expo-router";
 import {
   addDoc,
   collection,
-  serverTimestamp,
   doc,
   getDoc,
+  serverTimestamp,
 } from "firebase/firestore";
 import {
   AlertCircle,
@@ -48,7 +48,7 @@ const COLORS = {
 
 export default function ReviewRequestScreen() {
   const router = useRouter();
-  const { requestData, setRequestData } = useRequest();
+  const { requestData, setRequestData, clearRequestData } = useRequest();
   const { user } = useSession();
 
   const [isAgreed, setIsAgreed] = useState(false);
@@ -95,10 +95,13 @@ export default function ReviewRequestScreen() {
     setSubmitting(true);
     try {
       // Clean requestData of undefined values
-      const sanitizedData = Object.entries(requestData).reduce((acc: any, [key, value]) => {
-        if (value !== undefined) acc[key] = value;
-        return acc;
-      }, {});
+      const sanitizedData = Object.entries(requestData).reduce(
+        (acc: any, [key, value]) => {
+          if (value !== undefined) acc[key] = value;
+          return acc;
+        },
+        {},
+      );
 
       // Save to Firestore
       const docRef = await addDoc(collection(db, "requests"), {
@@ -132,6 +135,8 @@ export default function ReviewRequestScreen() {
         await addDoc(collection(db, "payments"), {
           requestId: requestId,
           jobId: requestId,
+          workerId: requestData.workerId || null,
+          status: "completed",
           userId: user?._id || "guest",
           amount: parseFloat(requestData.budget || "0"),
           serviceType: requestData.serviceType || "FixMate Service",
@@ -152,6 +157,10 @@ export default function ReviewRequestScreen() {
           params: { id: requestId, method: paymentMethod },
         });
       }
+
+      // Clear the request form data after successful submission
+      clearRequestData();
+      
     } catch (error: any) {
       Alert.alert("Submission Failed", error.message || "Please try again.");
     } finally {
@@ -277,7 +286,12 @@ export default function ReviewRequestScreen() {
                   <ShieldCheck size={14} color={COLORS.textSub} />
                   <Text style={styles.detailLabel}>Assigned Professional</Text>
                 </View>
-                <Text style={[styles.detailValue, !requestData.workerName && { color: COLORS.primary }]}>
+                <Text
+                  style={[
+                    styles.detailValue,
+                    !requestData.workerName && { color: COLORS.primary },
+                  ]}
+                >
                   {requestData.workerName || "Open for Bidding (Auto-Match)"}
                 </Text>
               </View>

@@ -23,6 +23,7 @@ import { BottomNavbar } from "../components/BottomNavbar";
 import { useTheme, getColors } from "../contexts/ThemeContext";
 import { useSession } from "../ctx";
 import { db } from "../utils/firebaseConfig";
+import { useRequest } from "../contexts/RequestContext";
 
 // Theme Colors
 const COLORS = {
@@ -46,6 +47,7 @@ export default function ClientDashboard() {
   // const THEME_COLORS = getColors(theme);
   // const isDark = theme === "dark";
   const { user } = useSession();
+  const { clearRequestData } = useRequest();
   const [searchQuery, setSearchQuery] = React.useState("");
   const [activeRequest, setActiveRequest] = React.useState<any>(null);
   const [recentRequests, setRecentRequests] = React.useState<any[]>([]);
@@ -249,7 +251,10 @@ export default function ClientDashboard() {
                       borderColor: COLORS.border,
                     },
                   ]}
-                  onPress={() => router.push("/create-request")}
+                  onPress={() => {
+                    clearRequestData();
+                    router.push("/create-request");
+                  }}
                 >
                   <View
                     style={[

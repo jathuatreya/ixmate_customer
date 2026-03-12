@@ -341,6 +341,7 @@ export default function MyRequestsScreen() {
                           id: item.id,
                           amount: item.budget || "5000",
                           serviceType: item.serviceType,
+                          workerId: item.workerId,
                         },
                       })
                     }
@@ -454,7 +455,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: 20,
-    paddingBottom: 100,
+    paddingBottom: 120,
     gap: 20,
   },
   card: {

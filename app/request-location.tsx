@@ -1,3 +1,4 @@
+import { MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import {
@@ -12,6 +13,7 @@ import {
 import React, { useState } from "react";
 import {
   Alert,
+  Modal,
   Platform,
   ScrollView,
   StyleSheet,
@@ -36,6 +38,7 @@ const COLORS = {
   border: "#1e293b",
 };
 
+import { SRI_LANKA_DISTRICTS } from "../constants/Districts";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
 // ... (imports remain)
@@ -66,6 +69,8 @@ export default function RequestLocationScreen() {
   );
 
   const [isFlexible, setIsFlexible] = useState(requestData.isFlexible || false);
+  const [district, setDistrict] = useState(requestData.district || user?.district || "");
+  const [showDistrictPicker, setShowDistrictPicker] = useState(false);
 
   const timeSuggestions = [
     "08:00 AM",
@@ -81,6 +86,13 @@ export default function RequestLocationScreen() {
       Alert.alert(
         "Missing Address",
         "Please provide the location for the service.",
+      );
+      return;
+    }
+    if (!district) {
+      Alert.alert(
+        "Missing District",
+        "Please select a district for the service.",
       );
       return;
     }
@@ -101,6 +113,7 @@ export default function RequestLocationScreen() {
     setRequestData({
       ...requestData,
       address,
+      district,
       scheduledDate: date.toDateString(),
       scheduledTime: finalTime,
       isFlexible,
@@ -161,16 +174,78 @@ export default function RequestLocationScreen() {
             <View style={styles.locationInputContainer}>
               <View style={styles.inputWrapper}>
                 <MapPin size={20} color="#94a3b8" style={{ marginLeft: 12 }} />
-                <TextInput autoComplete='off' autoCorrect={false} spellCheck={false}
+                <TextInput
+                  autoComplete="off"
+                  autoCorrect={false}
+                  spellCheck={false}
                   style={styles.input}
-                  placeholder="Enter shop address or landmark"
+                  placeholder="Street address / Building name"
                   placeholderTextColor="#94a3b8"
                   value={address}
                   onChangeText={setAddress}
                 />
               </View>
+
+              <TouchableOpacity
+                style={styles.inputWrapper}
+                onPress={() => setShowDistrictPicker(true)}
+              >
+                <MapPin size={20} color={COLORS.primary} style={{ marginLeft: 12 }} />
+                <View style={{ flex: 1, paddingHorizontal: 12, justifyContent: 'center' }}>
+                  <Text style={[styles.input, { color: district ? COLORS.textMain : "#94a3b8", paddingTop: Platform.OS === 'ios' ? 14 : 0 }]}>
+                    {district || "Select District"}
+                  </Text>
+                </View>
+                <ChevronDown size={20} color="#94a3b8" style={{ marginRight: 12 }} />
+              </TouchableOpacity>
             </View>
           </View>
+
+          {/* District Picker Modal */}
+          <Modal
+            visible={showDistrictPicker}
+            transparent={true}
+            animationType="slide"
+            onRequestClose={() => setShowDistrictPicker(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={[styles.modalContent, { backgroundColor: COLORS.surface }]}>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>Select District</Text>
+                  <TouchableOpacity onPress={() => setShowDistrictPicker(false)}>
+                    <MaterialIcons name="close" size={24} color={COLORS.textMain} />
+                  </TouchableOpacity>
+                </View>
+                <ScrollView contentContainerStyle={styles.districtList}>
+                  {SRI_LANKA_DISTRICTS.map((d) => (
+                    <TouchableOpacity
+                      key={d}
+                      style={[
+                        styles.districtItem,
+                        district === d && { backgroundColor: COLORS.primary + "20" },
+                      ]}
+                      onPress={() => {
+                        setDistrict(d);
+                        setShowDistrictPicker(false);
+                      }}
+                    >
+                      <Text
+                        style={[
+                          styles.districtText,
+                          { color: district === d ? COLORS.primary : COLORS.textMain },
+                        ]}
+                      >
+                        {d}
+                      </Text>
+                      {district === d && (
+                        <MaterialIcons name="check" size={20} color={COLORS.primary} />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            </View>
+          </Modal>
 
           {/* Date & Time Section */}
           <View style={[styles.sectionHeader, { marginTop: 32 }]}>
@@ -633,5 +708,44 @@ const styles = StyleSheet.create({
   },
   suggestionTextSelected: {
     color: "white",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    paddingTop: 24,
+    maxHeight: "80%",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 24,
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: COLORS.textMain,
+  },
+  districtList: {
+    paddingHorizontal: 16,
+    paddingBottom: 40,
+  },
+  districtItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+  },
+  districtText: {
+    fontSize: 16,
+    fontWeight: "500",
   },
 });

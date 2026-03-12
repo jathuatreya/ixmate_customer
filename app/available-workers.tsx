@@ -84,13 +84,32 @@ export default function SelectProfessionalScreen() {
         .filter((w) => w !== null);
 
       // Filter by relevant service type if applicable
-      const relevantWorkers = requestData.serviceType 
-        ? list.filter((w: any) => 
-            w.role?.toLowerCase().includes(requestData.serviceType!.toLowerCase()) ||
-            w.serviceCategory?.toLowerCase().includes(requestData.serviceType!.toLowerCase()) ||
-            w.workerRole?.toLowerCase().includes(requestData.serviceType!.toLowerCase())
+      let relevantWorkers = requestData.serviceType
+        ? list.filter(
+            (w: any) =>
+              w.role
+                ?.toLowerCase()
+                .includes(requestData.serviceType!.toLowerCase()) ||
+              w.serviceCategory
+                ?.toLowerCase()
+                .includes(requestData.serviceType!.toLowerCase()) ||
+              w.workerRole
+                ?.toLowerCase()
+                .includes(requestData.serviceType!.toLowerCase()),
           )
         : list;
+
+      // Further filter by district if specified in requestData
+      if (requestData.district) {
+        const districtWorkers = relevantWorkers.filter(
+          (w: any) =>
+            w.district?.toLowerCase() === requestData.district?.toLowerCase(),
+        );
+        // If we have workers in this district, show them. Otherwise fall back to all relevant workers.
+        if (districtWorkers.length > 0) {
+          relevantWorkers = districtWorkers;
+        }
+      }
 
       // Ensure we only show real workers, no dummy fallback
       setWorkers(relevantWorkers.length > 0 ? relevantWorkers : list);

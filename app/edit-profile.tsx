@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   ScrollView,
   StyleSheet,
@@ -19,6 +20,7 @@ import { BottomNavbar } from "../components/BottomNavbar";
 import { useTheme, getColors } from "../contexts/ThemeContext";
 import { useSession } from "../ctx";
 import { db } from "../utils/firebaseConfig";
+import { SRI_LANKA_DISTRICTS } from "../constants/Districts";
 
 const COLORS = {
   primary: "#10b981",
@@ -44,6 +46,7 @@ export default function EditProfileScreen() {
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
   const [district, setDistrict] = useState("");
+  const [showDistrictPicker, setShowDistrictPicker] = useState(false);
 
   useEffect(() => {
     if (!user?._id) return;
@@ -242,22 +245,102 @@ export default function EditProfileScreen() {
                 <Text style={[styles.label, { color: THEME_COLORS.textSub }]}>
                   District
                 </Text>
-                <TextInput autoComplete='off' autoCorrect={false} spellCheck={false}
+                <TouchableOpacity
                   style={[
                     styles.input,
                     {
-                      color: THEME_COLORS.textMain,
+                      justifyContent: "center",
                       backgroundColor: THEME_COLORS.background,
                       borderColor: THEME_COLORS.border,
                     },
                   ]}
-                  value={district}
-                  onChangeText={setDistrict}
-                  placeholder="e.g. Vavuniya"
-                  placeholderTextColor={THEME_COLORS.textSub}
-                />
+                  onPress={() => setShowDistrictPicker(true)}
+                >
+                  <Text
+                    style={{
+                      color: district ? THEME_COLORS.textMain : THEME_COLORS.textSub,
+                    }}
+                  >
+                    {district || "Select District"}
+                  </Text>
+                </TouchableOpacity>
               </View>
             </View>
+
+            {/* District Picker Modal */}
+            <Modal
+              visible={showDistrictPicker}
+              transparent={true}
+              animationType="slide"
+              onRequestClose={() => setShowDistrictPicker(false)}
+            >
+              <View style={styles.modalOverlay}>
+                <View
+                  style={[
+                    styles.modalContent,
+                    { backgroundColor: THEME_COLORS.surface },
+                  ]}
+                >
+                  <View style={styles.modalHeader}>
+                    <Text
+                      style={[
+                        styles.modalTitle,
+                        { color: THEME_COLORS.textMain },
+                      ]}
+                    >
+                      Select District
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => setShowDistrictPicker(false)}
+                    >
+                      <MaterialIcons
+                        name="close"
+                        size={24}
+                        color={THEME_COLORS.textMain}
+                      />
+                    </TouchableOpacity>
+                  </View>
+                  <ScrollView contentContainerStyle={styles.districtList}>
+                    {SRI_LANKA_DISTRICTS.map((d) => (
+                      <TouchableOpacity
+                        key={d}
+                        style={[
+                          styles.districtItem,
+                          district === d && {
+                            backgroundColor: THEME_COLORS.primary + "20",
+                          },
+                        ]}
+                        onPress={() => {
+                          setDistrict(d);
+                          setShowDistrictPicker(false);
+                        }}
+                      >
+                        <Text
+                          style={[
+                            styles.districtText,
+                            {
+                              color:
+                                district === d
+                                  ? THEME_COLORS.primary
+                                  : THEME_COLORS.textMain,
+                            },
+                          ]}
+                        >
+                          {d}
+                        </Text>
+                        {district === d && (
+                          <MaterialIcons
+                            name="check"
+                            size={20}
+                            color={THEME_COLORS.primary}
+                          />
+                        )}
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              </View>
+            </Modal>
           </View>
 
           <TouchableOpacity
@@ -356,5 +439,43 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    paddingTop: 24,
+    maxHeight: "80%",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 24,
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+  },
+  districtList: {
+    paddingHorizontal: 16,
+    paddingBottom: 40,
+  },
+  districtItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+  },
+  districtText: {
+    fontSize: 16,
+    fontWeight: "500",
   },
 });

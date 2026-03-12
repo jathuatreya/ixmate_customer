@@ -776,6 +776,7 @@ export default function RequestStatusScreen() {
                     id: request.id,
                     amount: request.budget || "5000",
                     serviceType: request.serviceType,
+                    workerId: request.workerId,
                   },
                 })
               }
@@ -820,7 +821,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 16,
     paddingTop: 16,
-    paddingBottom: 40,
+    paddingBottom: 120,
     gap: 20,
   },
   headerContainer: {

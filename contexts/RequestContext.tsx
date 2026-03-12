@@ -6,6 +6,8 @@ export type RequestData = {
   urgency?: "low" | "normal" | "high";
   photos?: string[];
   address?: string;
+  city?: string;
+  district?: string;
   scheduledDate?: string;
   scheduledTime?: string;
   isFlexible?: boolean;
@@ -30,6 +32,8 @@ const initialRequestData: RequestData = {
   urgency: "normal",
   photos: [],
   address: "",
+  city: "",
+  district: "",
   scheduledDate: "",
   scheduledTime: "",
   isFlexible: false,

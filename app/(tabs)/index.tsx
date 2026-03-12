@@ -22,6 +22,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { BottomNavbar } from "../../components/BottomNavbar";
 import { useSession } from "../../ctx"; // Fixed import path
 import { db } from "../../utils/firebaseConfig"; // Fixed import path
+import { useRequest } from "../../contexts/RequestContext";
 
 // Theme Colors
 const COLORS = {
@@ -42,6 +43,7 @@ const SCREEN_WIDTH = Dimensions.get("window").width;
 export default function ClientDashboard() {
   const router = useRouter();
   const { user } = useSession();
+  const { clearRequestData } = useRequest();
   const [searchQuery, setSearchQuery] = React.useState("");
   const [activeRequest, setActiveRequest] = React.useState<any>(null);
   const [recentRequests, setRecentRequests] = React.useState<any[]>([]);
@@ -215,6 +217,7 @@ export default function ClientDashboard() {
                       borderBottomColor: COLORS.border,
                     }}
                     onPress={() => {
+                      clearRequestData();
                       setSearchQuery("");
                       router.push("/create-request");
                     }}
@@ -334,7 +337,10 @@ export default function ClientDashboard() {
           <TouchableOpacity
             style={styles.createRequestBtn}
             activeOpacity={0.9}
-            onPress={() => router.push("/create-request")}
+            onPress={() => {
+              clearRequestData();
+              router.push("/create-request");
+            }}
           >
             <LinearGradient
               colors={[COLORS.primary, "#34d399"]}
