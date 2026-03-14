@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -10,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+
 import { SafeAreaView } from "react-native-safe-area-context";
 import { BottomNavbar } from "../components/BottomNavbar";
 import { useTheme, getColors } from "../contexts/ThemeContext";
@@ -41,8 +43,10 @@ export default function MyRequestsScreen() {
   const isDark = theme === "dark";
   const { user } = useSession();
   const [filter, setFilter] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
 
   useEffect(() => {
     if (!user?._id) return;
@@ -76,17 +80,25 @@ export default function MyRequestsScreen() {
 
   const getStatusBg = (status: string) => {
     const s = status?.toLowerCase() || "";
-    if (s === "active" || s === "accepted") return COLORS.bgActive;
-    if (s === "pending") return COLORS.bgPending;
-    if (s === "completed") return COLORS.bgCompleted;
-    if (s === "cancelled") return COLORS.bgCancelled;
-    return "#f1f5f9";
+    if (s === "active" || s === "accepted") return "rgba(59, 130, 246, 0.1)";
+    if (s === "pending") return "rgba(245, 158, 11, 0.1)";
+    if (s === "completed") return "rgba(16, 185, 129, 0.1)";
+    if (s === "cancelled") return "rgba(239, 68, 68, 0.1)";
+    return THEME_COLORS.surface;
   };
 
+
   const filteredRequests = requests.filter((req) => {
-    if (filter === "All") return true;
-    return req.status?.toLowerCase() === filter.toLowerCase();
+    const matchesFilter = filter === "All" || req.status?.toLowerCase() === filter.toLowerCase();
+    
+    const searchLower = searchQuery.toLowerCase();
+    const serviceType = (req.serviceType || "").toLowerCase();
+    const workerName = (req.workerName || "").toLowerCase();
+    const matchesSearch = serviceType.includes(searchLower) || workerName.includes(searchLower);
+
+    return matchesFilter && matchesSearch;
   });
+
 
   // Helper to format date if timestamp or string
   const formatDate = (date: any) => {
@@ -101,18 +113,19 @@ export default function MyRequestsScreen() {
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: THEME_COLORS.background }]}
-      edges={["left", "right"]}
+      edges={["top", "left", "right"]}
     >
       {/* Search Bar */}
       <View
         style={[
           styles.searchContainer,
           {
-            backgroundColor: THEME_COLORS.surface,
+            backgroundColor: THEME_COLORS.background,
             borderBottomColor: THEME_COLORS.border,
           },
         ]}
       >
+
         <View
           style={[
             styles.searchWrapper,
@@ -128,16 +141,24 @@ export default function MyRequestsScreen() {
             color={THEME_COLORS.textSub}
             style={styles.searchIcon}
           />
-          <TextInput autoComplete='off' autoCorrect={false} spellCheck={false}
+          <TextInput 
+            autoComplete='off' 
+            autoCorrect={false} 
+            spellCheck={false}
             style={[styles.searchInput, { color: THEME_COLORS.textMain }]}
             placeholder="Search service, worker..."
             placeholderTextColor={THEME_COLORS.textSub}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
           />
-          <TouchableOpacity style={styles.filterIconBtn}>
-            <MaterialIcons name="tune" size={20} color={THEME_COLORS.textSub} />
-          </TouchableOpacity>
+          {searchQuery !== "" && (
+            <TouchableOpacity onPress={() => setSearchQuery("")}>
+              <MaterialIcons name="close" size={20} color={THEME_COLORS.textSub} />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
+
 
       {/* Filter Tabs */}
       <View style={styles.tabsContainer}>
@@ -199,10 +220,13 @@ export default function MyRequestsScreen() {
               style={[
                 styles.card,
                 {
+                  backgroundColor: THEME_COLORS.surface,
+                  borderColor: THEME_COLORS.border,
                   borderLeftColor: getStatusColor(item.status),
                   opacity: item.status === "cancelled" ? 0.6 : 1,
                 },
               ]}
+
               onPress={() =>
                 router.push({
                   pathname: "/request-status",
@@ -214,19 +238,9 @@ export default function MyRequestsScreen() {
               {/* Card Header */}
               <View style={styles.cardHeader}>
                 <View style={styles.cardHeaderLeft}>
-                  <View
-                    style={[
-                      styles.iconBox,
-                      { backgroundColor: getStatusBg(item.status) },
-                    ]}
-                  >
-                    <MaterialIcons
-                      name="build"
-                      size={24}
-                      color={getStatusColor(item.status)}
-                    />
-                  </View>
                   <View>
+
+
                     <Text
                       style={[
                         styles.cardTitle,
@@ -271,7 +285,8 @@ export default function MyRequestsScreen() {
               </View>
 
               {/* Details Box */}
-              <View style={styles.detailsBox}>
+              <View style={[styles.detailsBox, { backgroundColor: THEME_COLORS.background, borderColor: THEME_COLORS.border }]}>
+
                 <View style={styles.detailRow}>
                   <MaterialIcons
                     name="location-on"
@@ -339,11 +354,12 @@ export default function MyRequestsScreen() {
                         pathname: "/payment",
                         params: {
                           id: item.id,
-                          amount: item.budget || "5000",
-                          serviceType: item.serviceType,
-                          workerId: item.workerId,
+                          amount: item.budget || "0",
+                          serviceType: item.serviceType || "Service",
+                          workerId: item.workerId || "",
                         },
                       })
+
                     }
                   >
                     <MaterialIcons
@@ -389,6 +405,7 @@ const styles = StyleSheet.create({
   },
   searchContainer: {
     paddingHorizontal: 20,
+    marginTop: 10,
     marginBottom: 16,
   },
 
@@ -440,9 +457,9 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   tabButtonInactive: {
-    backgroundColor: "#0f172a",
     borderColor: "#1e293b",
   },
+
   tabText: {
     fontSize: 14,
     fontWeight: "600",
@@ -459,12 +476,11 @@ const styles = StyleSheet.create({
     gap: 20,
   },
   card: {
-    backgroundColor: "#0f172a",
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#1e293b",
     borderLeftWidth: 4, // Status color border
+
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.03,
@@ -481,14 +497,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 12,
   },
-  iconBox: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
   cardTitle: {
+
     fontSize: 15,
     fontWeight: "bold",
     color: COLORS.textDark,
@@ -543,14 +553,13 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   detailsBox: {
-    backgroundColor: "#020617",
     borderRadius: 8,
     padding: 12,
     borderWidth: 1,
-    borderColor: "#1e293b",
     marginBottom: 16,
     gap: 6,
   },
+
   detailRow: {
     flexDirection: "row",
     alignItems: "center",

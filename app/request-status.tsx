@@ -633,6 +633,116 @@ export default function RequestStatusScreen() {
             </View>
           </View>
         )}
+        
+        {/* Work Report Section - Show when completed or paid */}
+        {(request.status === "completed" || request.status === "paid") && (
+          <View
+            style={[
+              styles.card,
+              styles.cardPadding,
+              {
+                backgroundColor: THEME_COLORS.surface,
+                borderColor: THEME_COLORS.border,
+              },
+            ]}
+          >
+            <View style={styles.proHeader}>
+              <View style={styles.proTitleRow}>
+                <MaterialIcons
+                  name="description"
+                  size={20}
+                  color={THEME_COLORS.primary}
+                />
+                <Text
+                  style={[
+                    styles.proHeaderTitle,
+                    { color: THEME_COLORS.primary, marginLeft: 8 },
+                  ]}
+                >
+                  Work Report
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.reportContent}>
+              <Text style={[styles.reportLabel, { color: THEME_COLORS.textSub }]}>
+                Worker Summary
+              </Text>
+              <View
+                style={[
+                  styles.reportBox,
+                  {
+                    backgroundColor: THEME_COLORS.background,
+                    borderColor: THEME_COLORS.border,
+                  },
+                ]}
+              >
+                <Text style={[styles.reportText, { color: THEME_COLORS.textMain }]}>
+                  {request.workSummary || 
+                    "All requested tasks have been completed. The fix was tested and is working perfectly. Area has been cleaned up."}
+                </Text>
+              </View>
+
+              <View style={styles.reportDetails}>
+                <View style={styles.reportItem}>
+                  <MaterialIcons name="timer" size={16} color={THEME_COLORS.textSub} />
+                  <Text style={[styles.reportItemText, { color: THEME_COLORS.textSub }]}>
+                    Time spent: {request.actualTime || "1.5 hours"}
+                  </Text>
+                </View>
+                <View style={styles.reportItem}>
+                  <MaterialIcons name="receipt" size={16} color={THEME_COLORS.textSub} />
+                  <Text style={[styles.reportItemText, { color: THEME_COLORS.textSub }]}>
+                    Materials used: {request.materialsUsed || "Standard replacement parts"}
+                  </Text>
+                </View>
+              </View>
+
+              {request.status === "completed" && (
+                <View style={styles.userConfirmationBox}>
+                  <Text style={[styles.confirmTitle, { color: THEME_COLORS.textMain }]}>
+                    Everything looks good?
+                  </Text>
+                  <Text style={[styles.confirmSub, { color: THEME_COLORS.textSub }]}>
+                    Please confirm if you are satisfied with the work details above before proceeding to payment.
+                  </Text>
+                  <View style={styles.actionGrid}>
+                    <TouchableOpacity 
+                      style={[styles.smallActionBtn, { backgroundColor: "rgba(16, 185, 129, 0.1)" }]}
+                      onPress={() => Alert.alert("Confirmed", "You have confirmed the work report. You can now proceed to payment.")}
+                    >
+                      <MaterialIcons name="check" size={20} color={THEME_COLORS.primary} />
+                      <Text style={[styles.smallActionText, { color: THEME_COLORS.primary }]}>Confirm</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[styles.smallActionBtn, { backgroundColor: "rgba(239, 68, 68, 0.1)" }]}
+                      onPress={() => {
+                        Alert.alert(
+                          "Report Issue",
+                          "What is the issue with the work?",
+                          [
+                            { text: "Cancel", style: "cancel" },
+                            { 
+                              text: "Report to Support", 
+                              onPress: () => Alert.alert("Reported", "Our support team has been notified. We will contact you shortly.")
+                            }
+                          ]
+                        );
+                      }}
+                    >
+                      <MaterialIcons name="report-problem" size={20} color="#ef4444" />
+                      <Text style={[styles.smallActionText, { color: "#ef4444" }]}>Issue</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                </View>
+              )}
+            </View>
+          </View>
+        )}
+
+
+
 
         {/* Timeline */}
         <View
@@ -1315,9 +1425,71 @@ const styles = StyleSheet.create({
     color: COLORS.textSub,
   },
   footerButtons: {
+    padding: 20,
+    gap: 16,
+  },
+  reportContent: {
+    paddingTop: 12,
+  },
+  reportLabel: {
+    fontSize: 12,
+    fontWeight: "bold",
+    textTransform: "uppercase",
+    marginBottom: 8,
+  },
+  reportBox: {
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 16,
+  },
+  reportText: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  reportDetails: {
+    gap: 8,
     marginBottom: 20,
   },
+  reportItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  reportItemText: {
+    fontSize: 13,
+  },
+  userConfirmationBox: {
+    borderTopWidth: 1,
+    borderTopColor: "rgba(148, 163, 184, 0.1)",
+    paddingTop: 16,
+    marginTop: 8,
+  },
+  confirmTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 4,
+  },
+  confirmSub: {
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 16,
+  },
+  smallActionBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 10,
+    borderRadius: 8,
+    gap: 8,
+  },
+  smallActionText: {
+    fontSize: 14,
+    fontWeight: "bold",
+  },
   completeBtnBtnWrapper: {
+
     shadowColor: COLORS.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,

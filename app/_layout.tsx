@@ -91,6 +91,7 @@ function RootLayoutNav() {
         options={{ headerShown: false, title: "Messages" }}
       />
       <Stack.Screen name="client-home" options={{ headerShown: false }} />
+      <Stack.Screen name="workers" options={{ headerShown: false }} />
       <Stack.Screen name="+not-found" />
     </Stack>
   );

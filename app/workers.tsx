@@ -1,55 +1,29 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   FlatList,
   Image,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+
+import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { BottomNavbar } from "../components/BottomNavbar";
 import { getColors, useTheme } from "../contexts/ThemeContext";
+import { db } from "../utils/firebaseConfig";
 
 import { SRI_LANKA_DISTRICTS } from "../constants/Districts";
 
 const DISTRICTS = ["All", ...SRI_LANKA_DISTRICTS];
 
-const DUMMY_WORKERS = Array.from({ length: 20 }, (_, i) => ({
-  id: `${i + 1}`,
-  name: [
-    "Aruna Perera",
-    "Kasun Silva",
-    "Nuwan Jayawardena",
-    "Saman Kumara",
-    "Sunil Gamage",
-    "Dilshan Mendis",
-    "Kamal Wickramasinghe",
-    "Nimal Ranjith",
-    "Ajith Peiris",
-    "Sanjeewa Gamage",
-    "Lahiru Udara",
-    "Thilina Dias",
-    "Roshan Gunaratne",
-    "Pathum Nissanka",
-    "Wanindu Hasaranga",
-    "Kusal Perera",
-    "Angelo Mathews",
-    "Dimuth Karunaratne",
-    "Dinesh Chandimal",
-    "Suranga Lakmal",
-  ][i],
-  role: ["Plumber", "painter", "mason", "cleaner"][i % 5],
-  rating: (3.5 + Math.random() * 1.5).toFixed(1),
-  reviews: Math.floor(Math.random() * 200) + 10,
-  district: DISTRICTS[1 + (i % (DISTRICTS.length - 1))],
-  experience: `${Math.floor(Math.random() * 10) + 2} Years`,
-  price: `${Math.floor(Math.random() * 1000) + 1500}/hr`,
-  image: `https://i.pravatar.cc/300?u=${i}`,
-}));
+// Local constants and types removed to use database data
 
 export default function WorkersListScreen() {
   const router = useRouter();
@@ -58,12 +32,55 @@ export default function WorkersListScreen() {
   const isDark = theme === "dark";
 
   const [selectedDistrict, setSelectedDistrict] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [workers, setWorkers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredWorkers = DUMMY_WORKERS.filter(
-    (w) => selectedDistrict === "All" || w.district === selectedDistrict,
-  );
+  useEffect(() => {
+    // Fetch workers from users collection where role is worker
+    const q = query(collection(db, "users"), where("role", "==", "worker"));
 
-  const renderWorkerCard = ({ item }: { item: (typeof DUMMY_WORKERS)[0] }) => (
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const workersList = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setWorkers(workersList);
+        setLoading(false);
+      },
+      (error) => {
+        console.error("Error fetching workers:", error);
+        setLoading(false);
+      },
+    );
+
+    return () => unsubscribe();
+  }, []);
+
+  const filteredWorkers = workers.filter((worker) => {
+    const matchesDistrict =
+      selectedDistrict === "All" ||
+      worker.district?.toLowerCase() === selectedDistrict.toLowerCase() ||
+      worker.city?.toLowerCase() === selectedDistrict.toLowerCase();
+
+    const searchLower = searchQuery.toLowerCase();
+    const name = (worker.fullName || worker.name || "").toLowerCase();
+    const role = (
+      worker.workerRole ||
+      worker.category ||
+      worker.serviceCategory ||
+      ""
+    ).toLowerCase();
+
+    const matchesSearch =
+      name.includes(searchLower) || role.includes(searchLower);
+
+    return matchesDistrict && matchesSearch;
+  });
+
+  const renderWorkerCard = ({ item }: { item: any }) => (
     <TouchableOpacity
       style={[
         styles.workerCard,
@@ -79,12 +96,21 @@ export default function WorkersListScreen() {
         })
       }
     >
-      <Image source={{ uri: item.image }} style={styles.workerImage} />
+      <Image
+        source={{
+          uri:
+            item.profileImage ||
+            item.image ||
+            `https://i.pravatar.cc/300?u=${item.id}`,
+        }}
+        style={styles.workerImage}
+      />
       <View style={styles.workerInfo}>
         <View style={styles.workerHeader}>
           <Text style={[styles.workerName, { color: THEME_COLORS.textMain }]}>
-            {item.name}
+            {item.fullName || item.name || "FixMate Worker"}
           </Text>
+
           <View
             style={[
               styles.ratingBadge,
@@ -94,12 +120,15 @@ export default function WorkersListScreen() {
             ]}
           >
             <MaterialIcons name="star" size={14} color="#eab308" />
-            <Text style={styles.ratingText}>{item.rating}</Text>
+            <Text style={styles.ratingText}>{item.rating || "5.0"}</Text>
           </View>
         </View>
 
         <Text style={[styles.workerRole, { color: THEME_COLORS.primary }]}>
-          {item.role}
+          {item.workerRole ||
+            item.category ||
+            item.serviceCategory ||
+            "Professional"}
         </Text>
 
         <View style={styles.workerMeta}>
@@ -110,23 +139,23 @@ export default function WorkersListScreen() {
               color={THEME_COLORS.textSub}
             />
             <Text style={[styles.metaText, { color: THEME_COLORS.textSub }]}>
-              {item.district}
+              {item.district || item.city || "Unknown"}
             </Text>
           </View>
           <View style={styles.metaItem}>
             <MaterialIcons name="work" size={14} color={THEME_COLORS.textSub} />
             <Text style={[styles.metaText, { color: THEME_COLORS.textSub }]}>
-              {item.experience}
+              {item.experience || "2+ Years"}
             </Text>
           </View>
         </View>
 
         <View style={styles.workerFooter}>
           <Text style={[styles.reviewsText, { color: THEME_COLORS.textSub }]}>
-            {item.reviews} Reviews
+            {item.reviews || 0} Reviews
           </Text>
           <Text style={[styles.priceText, { color: THEME_COLORS.textMain }]}>
-            Rs. {item.price}
+            Rs. {item.hourlyRate || item.price || "1500"}/hr
           </Text>
         </View>
       </View>
@@ -138,18 +167,34 @@ export default function WorkersListScreen() {
       style={[styles.container, { backgroundColor: THEME_COLORS.background }]}
       edges={["top", "left", "right"]}
     >
-      <View style={[styles.header, { borderBottomColor: THEME_COLORS.border }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <MaterialIcons
-            name="arrow-back"
-            size={24}
-            color={THEME_COLORS.textMain}
+      <View style={styles.searchContainer}>
+        <View
+          style={[
+            styles.searchBar,
+            {
+              backgroundColor: THEME_COLORS.surface,
+              borderColor: THEME_COLORS.border,
+            },
+          ]}
+        >
+          <MaterialIcons name="search" size={20} color={THEME_COLORS.textSub} />
+          <TextInput
+            placeholder="Search workers by name or skill..."
+            placeholderTextColor={THEME_COLORS.textSub}
+            style={[styles.searchInput, { color: THEME_COLORS.textMain }]}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
           />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: THEME_COLORS.textMain }]}>
-          Browse Workers
-        </Text>
-        <View style={{ width: 40 }} />
+          {searchQuery !== "" && (
+            <TouchableOpacity onPress={() => setSearchQuery("")}>
+              <MaterialIcons
+                name="close"
+                size={20}
+                color={THEME_COLORS.textSub}
+              />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       <View style={styles.filterSection}>
@@ -191,25 +236,34 @@ export default function WorkersListScreen() {
         </ScrollView>
       </View>
 
-      <FlatList
-        data={filteredWorkers}
-        renderItem={renderWorkerCard}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <MaterialIcons
-              name="search-off"
-              size={64}
-              color={THEME_COLORS.textSub}
-            />
-            <Text style={[styles.emptyText, { color: THEME_COLORS.textSub }]}>
-              No workers found in this district.
-            </Text>
-          </View>
-        }
-      />
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={THEME_COLORS.primary} />
+          <Text style={[styles.loadingText, { color: THEME_COLORS.textSub }]}>
+            Finding professionals...
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          data={filteredWorkers}
+          renderItem={renderWorkerCard}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <MaterialIcons
+                name="search-off"
+                size={64}
+                color={THEME_COLORS.textSub}
+              />
+              <Text style={[styles.emptyText, { color: THEME_COLORS.textSub }]}>
+                No workers found matching your search.
+              </Text>
+            </View>
+          }
+        />
+      )}
 
       <BottomNavbar />
     </SafeAreaView>
@@ -220,20 +274,37 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-  },
-  backBtn: {
-    padding: 8,
-  },
   headerTitle: {
     fontSize: 18,
     fontWeight: "bold",
+  },
+
+  searchContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+  },
+  searchBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    height: 50,
+    borderRadius: 12,
+    borderWidth: 1,
+    gap: 10,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: 14,
+    fontWeight: "500",
   },
   filterSection: {
     paddingVertical: 16,
