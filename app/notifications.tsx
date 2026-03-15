@@ -11,6 +11,7 @@ import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Image,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -49,6 +50,14 @@ export default function NotificationsScreen() {
   const [filter, setFilter] = useState("All");
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1500);
+  }, []);
 
   useEffect(() => {
     if (!user?._id) return;
@@ -162,6 +171,14 @@ export default function NotificationsScreen() {
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={THEME_COLORS.primary}
+            colors={[THEME_COLORS.primary]}
+          />
+        }
       >
         {loading ? (
           <View style={{ marginTop: 100 }}>

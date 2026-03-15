@@ -4,6 +4,7 @@ import { collection, onSnapshot, query, where } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
   Image,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -46,6 +47,14 @@ export default function MyRequestsScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1500);
+  }, []);
 
 
   useEffect(() => {
@@ -199,6 +208,14 @@ export default function MyRequestsScreen() {
       <ScrollView
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={COLORS.primary}
+            colors={[COLORS.primary]}
+          />
+        }
       >
         {filteredRequests.length === 0 && (
           <View style={{ alignItems: "center", marginTop: 40, opacity: 0.5 }}>

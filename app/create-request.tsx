@@ -84,8 +84,21 @@ export default function CreateRequestScreen() {
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: THEME_COLORS.background }]}
-      edges={["left", "right"]}
+      edges={["top", "left", "right"]}
     >
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.headerBtn}>
+          <MaterialIcons
+            name="arrow-back"
+            size={24}
+            color={THEME_COLORS.textMain}
+          />
+        </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: THEME_COLORS.textMain }]}>
+          Create Request
+        </Text>
+      </View>
+
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -246,34 +259,24 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#020617",
   },
-  scrollContent: {
-    paddingBottom: 110, // Space for bottom nav + floating center button
-  },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: "#0f172a",
-    borderBottomWidth: 1,
-    borderBottomColor: "#1e293b",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  headerBtn: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    marginRight: 12,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: "bold",
-    color: COLORS.textMain,
   },
-  backButton: {
-    padding: 8,
-    borderRadius: 20,
-    marginLeft: -8,
-  },
-  menuButton: {
-    padding: 8,
-    borderRadius: 20,
-    marginRight: -8,
-    opacity: 0, // Hidden as per design ref, keeping layout consistent
+  scrollContent: {
+    paddingBottom: 110, // Space for bottom nav + floating center button
   },
   stepCardContainer: {
     paddingHorizontal: 24,
@@ -328,7 +331,7 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   stepTitle: {
-    fontSize: 20,
+    fontSize: 26,
     fontWeight: "bold",
     color: "white",
   },

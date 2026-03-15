@@ -130,7 +130,15 @@ export default function RequestLocationScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["left", "right"]}>
+    <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.headerBtn}>
+          <MaterialIcons name="arrow-back" size={24} color={COLORS.textMain} />
+        </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: COLORS.textMain }]}>
+          Request Location
+        </Text>
+      </View>
       <View style={{ flex: 1 }}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -380,7 +388,7 @@ export default function RequestLocationScreen() {
                 end={{ x: 1, y: 0 }}
                 style={styles.nextButton}
               >
-                <Text style={styles.nextButtonText}>REVIEW REQUEST</Text>
+                <Text style={styles.nextButtonText}>SHOW AVAILABLE WORKERS</Text>
                 <ArrowRight size={20} color="white" />
               </LinearGradient>
             </TouchableOpacity>
@@ -398,26 +406,25 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  scrollContent: {
-    paddingHorizontal: 24,
-    paddingBottom: 100,
-  },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
-  backButton: {
+  headerBtn: {
     padding: 8,
     borderRadius: 20,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "rgba(255,255,255,0.05)",
+    marginRight: 12,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: "bold",
-    color: "#0f172a",
+  },
+  scrollContent: {
+    paddingHorizontal: 24,
+    paddingBottom: 100,
   },
   stepCardContainer: {
     marginBottom: 24,
@@ -470,7 +477,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   stepTitle: {
-    fontSize: 20,
+    fontSize: 26,
     fontWeight: "bold",
     color: "white",
   },

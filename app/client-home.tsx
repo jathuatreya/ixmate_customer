@@ -11,6 +11,7 @@ import {
 import React from "react";
 import {
   Dimensions,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -52,6 +53,14 @@ export default function ClientDashboard() {
   const [activeRequest, setActiveRequest] = React.useState<any>(null);
   const [recentRequests, setRecentRequests] = React.useState<any[]>([]);
   const [availableJobs, setAvailableJobs] = React.useState<any[]>([]);
+  const [refreshing, setRefreshing] = React.useState(false);
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1500);
+  }, []);
 
   // Fetch Data
   React.useEffect(() => {
@@ -135,6 +144,14 @@ export default function ClientDashboard() {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={COLORS.primary}
+            colors={[COLORS.primary]}
+          />
+        }
       >
         {/* Header Section */}
         <View style={styles.headerContainer}>

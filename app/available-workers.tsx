@@ -8,6 +8,7 @@ import {
   Animated,
   Dimensions,
   Image,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -50,6 +51,14 @@ export default function SelectProfessionalScreen() {
   const scrollX = useRef(new Animated.Value(0)).current;
   const [workers, setWorkers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1500);
+  }, []);
 
   useEffect(() => {
     // Query users collection for workers
@@ -83,36 +92,8 @@ export default function SelectProfessionalScreen() {
         })
         .filter((w) => w !== null);
 
-      // Filter by relevant service type if applicable
-      let relevantWorkers = requestData.serviceType
-        ? list.filter(
-            (w: any) =>
-              w.role
-                ?.toLowerCase()
-                .includes(requestData.serviceType!.toLowerCase()) ||
-              w.serviceCategory
-                ?.toLowerCase()
-                .includes(requestData.serviceType!.toLowerCase()) ||
-              w.workerRole
-                ?.toLowerCase()
-                .includes(requestData.serviceType!.toLowerCase()),
-          )
-        : list;
-
-      // Further filter by district if specified in requestData
-      if (requestData.district) {
-        const districtWorkers = relevantWorkers.filter(
-          (w: any) =>
-            w.district?.toLowerCase() === requestData.district?.toLowerCase(),
-        );
-        // If we have workers in this district, show them. Otherwise fall back to all relevant workers.
-        if (districtWorkers.length > 0) {
-          relevantWorkers = districtWorkers;
-        }
-      }
-
-      // Ensure we only show workers that match the selected category
-      setWorkers(relevantWorkers);
+      // Show all workers as requested
+      setWorkers(list);
       setLoading(false);
     });
 
@@ -274,7 +255,7 @@ export default function SelectProfessionalScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.headerBtn}>
           <MaterialIcons name="arrow-back" size={24} color={THEME_COLORS.textMain} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Select Professional</Text>
+        <Text style={styles.headerTitle}>Available Professionals</Text>
         <TouchableOpacity 
           onPress={() => {
             updateRequestData({ workerId: null as any, workerName: null as any });
@@ -290,6 +271,14 @@ export default function SelectProfessionalScreen() {
         style={styles.contentContainer}
         contentContainerStyle={{ paddingBottom: 110 }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={COLORS.primary}
+            colors={[COLORS.primary]}
+          />
+        }
       >
         {/* AI Match Banner */}
         <View style={styles.bannerContainer}>
@@ -445,7 +434,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(16, 185, 129, 0.3)",
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: "bold",
     color: COLORS.textMain,
   },

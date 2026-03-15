@@ -11,6 +11,7 @@ import {
 import React from "react";
 import {
   Dimensions,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -116,7 +117,6 @@ export default function ClientDashboard() {
 
     const unsubJobs = onSnapshot(jobsQ, (snapshot) => {
       const list = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      // Filter out unwanted types if necessary, though they should be hidden anyway if they aren't available
       setAvailableJobs(list);
     });
 
@@ -127,12 +127,29 @@ export default function ClientDashboard() {
     };
   }, [user?._id]);
 
+  const [refreshing, setRefreshing] = React.useState(false);
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1500);
+  }, []);
+
   return (
     <View style={[styles.container, { backgroundColor: COLORS.background }]}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={COLORS.primary}
+            colors={[COLORS.primary]}
+          />
+        }
       >
         {/* Header Section */}
         <View style={styles.headerContainer}>

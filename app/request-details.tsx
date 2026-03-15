@@ -1,3 +1,4 @@
+import { MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { AlertCircle, ArrowRight, FileText } from "lucide-react-native";
@@ -71,7 +72,15 @@ export default function RequestDetailsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["left", "right"]}>
+    <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.headerBtn}>
+          <MaterialIcons name="arrow-back" size={24} color={COLORS.textMain} />
+        </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: COLORS.textMain }]}>
+          Request Details
+        </Text>
+      </View>
       <View style={{ flex: 1 }}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -304,19 +313,18 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
-  backButton: {
+  headerBtn: {
     padding: 8,
     borderRadius: 20,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "rgba(255,255,255,0.05)",
+    marginRight: 12,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: "bold",
-    color: "#0f172a",
   },
   statValue: {
     fontSize: 18,
@@ -375,7 +383,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   stepTitle: {
-    fontSize: 20,
+    fontSize: 26,
     fontWeight: "bold",
     color: "white",
   },

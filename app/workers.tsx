@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import {
   FlatList,
   Image,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -35,6 +36,14 @@ export default function WorkersListScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [workers, setWorkers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1500);
+  }, []);
 
   useEffect(() => {
     // Fetch workers from users collection where role is worker
@@ -248,6 +257,14 @@ export default function WorkersListScreen() {
           data={filteredWorkers}
           renderItem={renderWorkerCard}
           keyExtractor={(item) => item.id}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={THEME_COLORS.primary}
+              colors={[THEME_COLORS.primary]}
+            />
+          }
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={

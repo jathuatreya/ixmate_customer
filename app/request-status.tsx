@@ -81,24 +81,37 @@ export default function RequestStatusScreen() {
       if (docSnap.exists()) {
         const data: any = { id: docSnap.id, ...docSnap.data() };
         setRequest(data);
-
-        // If workerId exists, fetch worker info
-        if (data.workerId) {
-          const workerUnsub = onSnapshot(
-            doc(db, "workers", data.workerId),
-            (workerSnap) => {
-              if (workerSnap.exists()) {
-                setWorker({ id: workerSnap.id, ...workerSnap.data() });
-              }
-            },
-          );
-          return () => workerUnsub();
-        }
       }
       setLoading(false);
     });
     return () => unsub();
   }, [id]);
+
+  useEffect(() => {
+    if (!request?.workerId) {
+      setWorker(null);
+      return;
+    }
+
+    const workerUnsub = onSnapshot(
+      doc(db, "users", request.workerId),
+      (workerSnap) => {
+        if (workerSnap.exists()) {
+          const workerData = workerSnap.data();
+          setWorker({
+            id: workerSnap.id,
+            ...workerData,
+            name:
+              workerData.displayName ||
+              workerData.fullName ||
+              workerData.name ||
+              "FixMate Professional",
+          });
+        }
+      },
+    );
+    return () => workerUnsub();
+  }, [request?.workerId]);
 
   const handleCancel = async () => {
     Alert.alert(

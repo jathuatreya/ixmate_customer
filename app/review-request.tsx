@@ -1,3 +1,4 @@
+import { MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import {
@@ -55,7 +56,7 @@ export default function ReviewRequestScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<
     "cash" | "instant" | "saved_card"
-  >("cash");
+  >("instant");
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [savedCard, setSavedCard] = useState<any>(null);
 
@@ -108,12 +109,13 @@ export default function ReviewRequestScreen() {
         ...sanitizedData,
         userId: user?._id || "guest",
         paymentMethod,
-        status:
-          paymentMethod === "instant"
+        status: requestData.workerId 
+          ? "accepted" 
+          : (paymentMethod === "instant"
             ? "awaiting_payment"
             : paymentMethod === "saved_card"
               ? "paid"
-              : "pending",
+              : "pending"),
         createdAt: serverTimestamp(),
       });
 
@@ -127,6 +129,7 @@ export default function ReviewRequestScreen() {
             id: requestId,
             amount: requestData.budget,
             serviceType: requestData.serviceType,
+            workerId: requestData.workerId || "",
           },
         });
         // Remove clearing state here, clear only on successful payment or home transition
@@ -169,7 +172,15 @@ export default function ReviewRequestScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["left", "right"]}>
+    <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.headerBtn}>
+          <MaterialIcons name="arrow-back" size={24} color={COLORS.textMain} />
+        </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: COLORS.textMain }]}>
+          Review Request
+        </Text>
+      </View>
       <View style={{ flex: 1 }}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -343,30 +354,7 @@ export default function ReviewRequestScreen() {
                     </TouchableOpacity>
                   </View>
 
-                  <TouchableOpacity
-                    style={[
-                      styles.methodItem,
-                      paymentMethod === "cash" && styles.methodItemSelected,
-                    ]}
-                    onPress={() => {
-                      setPaymentMethod("cash");
-                      setShowPaymentModal(false);
-                    }}
-                  >
-                    <View style={styles.methodIconBg}>
-                      <MapPin size={20} color={COLORS.primary} />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.methodName}>Cash on Delivery</Text>
-                      <Text style={styles.methodSub}>
-                        Pay after service completion
-                      </Text>
-                    </View>
-                    {paymentMethod === "cash" && (
-                      <CheckCircle size={20} color={COLORS.primary} />
-                    )}
-                  </TouchableOpacity>
-
+                  {/* 1st Method: Pay Instantly */}
                   <TouchableOpacity
                     style={[
                       styles.methodItem,
@@ -387,10 +375,10 @@ export default function ReviewRequestScreen() {
                     <View
                       style={[
                         styles.methodIconBg,
-                        { backgroundColor: "#eff6ff" },
+                        { backgroundColor: "rgba(59, 130, 246, 0.1)" },
                       ]}
                     >
-                      <CreditCard size={20} color="#3b82f6" />
+                      <CreditCard size={28} color="#3b82f6" />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.methodName}>
@@ -401,10 +389,36 @@ export default function ReviewRequestScreen() {
                       </Text>
                     </View>
                     {paymentMethod === "instant" && (
-                      <CheckCircle size={20} color={COLORS.primary} />
+                      <CheckCircle size={28} color={COLORS.primary} />
                     )}
                   </TouchableOpacity>
 
+                  {/* 2nd Method: Cash on Delivery */}
+                  <TouchableOpacity
+                    style={[
+                      styles.methodItem,
+                      paymentMethod === "cash" && styles.methodItemSelected,
+                    ]}
+                    onPress={() => {
+                      setPaymentMethod("cash");
+                      setShowPaymentModal(false);
+                    }}
+                  >
+                    <View style={styles.methodIconBg}>
+                      <MapPin size={28} color={COLORS.primary} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.methodName}>Cash on Delivery</Text>
+                      <Text style={styles.methodSub}>
+                        Pay after service completion
+                      </Text>
+                    </View>
+                    {paymentMethod === "cash" && (
+                      <CheckCircle size={28} color={COLORS.primary} />
+                    )}
+                  </TouchableOpacity>
+
+                  {/* Saved Card if any */}
                   {savedCard && (
                     <TouchableOpacity
                       style={[
@@ -420,10 +434,10 @@ export default function ReviewRequestScreen() {
                       <View
                         style={[
                           styles.methodIconBg,
-                          { backgroundColor: "#fdf4ff" },
+                          { backgroundColor: "rgba(192, 38, 211, 0.1)" },
                         ]}
                       >
-                        <CreditCard size={20} color="#c026d3" />
+                        <CreditCard size={28} color="#c026d3" />
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={styles.methodName}>
@@ -432,7 +446,7 @@ export default function ReviewRequestScreen() {
                         <Text style={styles.methodSub}>Saved card payment</Text>
                       </View>
                       {paymentMethod === "saved_card" && (
-                        <CheckCircle size={20} color={COLORS.primary} />
+                        <CheckCircle size={28} color={COLORS.primary} />
                       )}
                     </TouchableOpacity>
                   )}
@@ -555,19 +569,18 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
-  backButton: {
+  headerBtn: {
     padding: 8,
     borderRadius: 20,
-    backgroundColor: COLORS.surface,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    marginRight: 12,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: "bold",
-    color: COLORS.textMain,
   },
   stepCardContainer: {
     marginBottom: 24,
@@ -620,7 +633,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   stepTitle: {
-    fontSize: 20,
+    fontSize: 26,
     fontWeight: "bold",
     color: "white",
   },
@@ -664,9 +677,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   serviceTitle: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: "bold",
-    color: "#334155",
+    color: COLORS.textMain,
   },
   serviceSub: {
     fontSize: 12,
@@ -698,8 +711,8 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   detailValue: {
-    fontSize: 14,
-    color: "#334155",
+    fontSize: 16,
+    color: COLORS.textMain,
     fontWeight: "600",
   },
   paymentRow: {
@@ -713,9 +726,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   paymentText: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "500",
-    color: "#475569",
+    color: COLORS.textSub,
   },
   paymentRight: {
     flexDirection: "row",
@@ -723,9 +736,9 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   cashText: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "600",
-    color: "#334155",
+    color: COLORS.textMain,
   },
   totalRow: {
     flexDirection: "row",
@@ -734,12 +747,12 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   totalLabel: {
-    fontSize: 15,
+    fontSize: 18,
     fontWeight: "600",
-    color: "#334155",
+    color: COLORS.textSub,
   },
   totalValue: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: "bold",
     color: COLORS.primary,
   },
@@ -827,52 +840,55 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   modalContent: {
-    backgroundColor: "white",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    backgroundColor: COLORS.surface,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
     padding: 24,
-    paddingBottom: 40,
+    paddingBottom: 60,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   modalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 24,
+    marginBottom: 32,
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: "bold",
-    color: "#1e293b",
+    color: COLORS.textMain,
   },
   methodItem: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 16,
-    padding: 16,
-    borderRadius: 16,
+    gap: 20,
+    padding: 20,
+    borderRadius: 20,
     borderWidth: 2,
-    borderColor: "#f1f5f9",
-    marginBottom: 12,
+    borderColor: COLORS.border,
+    marginBottom: 16,
   },
   methodItemSelected: {
     borderColor: COLORS.primary,
-    backgroundColor: "#f0fdfa",
+    backgroundColor: "rgba(16, 185, 129, 0.1)",
   },
   methodIconBg: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: "#ecfdf5",
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: "rgba(16, 185, 129, 0.1)",
     alignItems: "center",
     justifyContent: "center",
   },
   methodName: {
-    fontSize: 15,
+    fontSize: 19,
     fontWeight: "bold",
-    color: "#334155",
+    color: COLORS.textMain,
   },
   methodSub: {
-    fontSize: 12,
-    color: "#94a3b8",
+    fontSize: 15,
+    color: COLORS.textSub,
+    marginTop: 2,
   },
 });

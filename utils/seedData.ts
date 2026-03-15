@@ -43,71 +43,81 @@ export const seedDatabase = async () => {
       {
         id: "worker_1",
         name: "Kamal Gunarathne",
-        category: "Plumbing",
-        categoryId: "cat_plumbing",
+        displayName: "Kamal Gunarathne",
+        role: "worker",
+        workerRole: "Plumbing",
+        serviceCategory: "Plumbing",
         rating: 4.8,
         reviews: 124,
-        hourlyRate: 1500,
-        location: "Colombo 03",
+        experience: "10+ Years",
+        district: "Colombo",
+        city: "Colombo 03",
         image: "https://randomuser.me/api/portraits/men/32.jpg",
         isAvailable: true,
+        verified: true,
         description:
           "Expert plumber with 10 years of experience in residential repairs.",
       },
       {
         id: "worker_2",
         name: "Sunil Perera",
-        category: "Electrical",
-        categoryId: "cat_electrical",
+        displayName: "Sunil Perera",
+        role: "worker",
+        workerRole: "Cleaning",
+        serviceCategory: "Cleaning",
         rating: 4.9,
         reviews: 89,
-        hourlyRate: 2000,
-        location: "Dehiwala",
+        experience: "5+ Years",
+        district: "Colombo",
+        city: "Dehiwala",
         image: "https://randomuser.me/api/portraits/men/45.jpg",
         isAvailable: true,
+        verified: true,
         description:
-          "Certified electrician for all your wiring and installation needs.",
+          "Professional cleaner specializing in deep cleaning and disinfection.",
       },
       {
         id: "worker_3",
         name: "Nimali Silva",
-        category: "Cleaning",
-        categoryId: "cat_cleaning",
+        displayName: "Nimali Silva",
+        role: "worker",
+        workerRole: "Painting",
+        serviceCategory: "Painting",
         rating: 4.7,
         reviews: 210,
-        hourlyRate: 1000,
-        location: "Nugegoda",
+        experience: "8+ Years",
+        district: "Colombo",
+        city: "Nugegoda",
         image: "https://randomuser.me/api/portraits/women/44.jpg",
         isAvailable: true,
+        verified: true,
         description:
-          "Standard and deep cleaning services for homes and offices.",
+          "Artistic painter with an eye for detail. Interior and exterior.",
       },
       {
         id: "worker_4",
         name: "Raja Bandara",
-        category: "Painting",
-        categoryId: "cat_painting",
+        displayName: "Raja Bandara",
+        role: "worker",
+        workerRole: "Masonry",
+        serviceCategory: "Masonry",
         rating: 4.6,
         reviews: 56,
-        hourlyRate: 1800,
-        location: "Battaramulla",
+        experience: "12+ Years",
+        district: "Colombo",
+        city: "Battaramulla",
         image: "https://randomuser.me/api/portraits/men/67.jpg",
-        isAvailable: false,
+        isAvailable: true,
+        verified: true,
         description:
-          "Professional wall painter. Interior and exterior painting.",
+          "Skilled mason for all construction and renovation projects.",
       },
     ];
 
     workers.forEach((worker) => {
-      const ref = doc(db, "workers", worker.id);
+      const ref = doc(db, "users", worker.id);
       batch.set(ref, worker);
     });
-
-    // 3. Requests (Dummy past requests for the logged in user context usually, but here generic)
-    // We won't batch these as they might depend on user IDs, but for now we can add some 'sample' requests
-    // assigned to a placeholder user if needed, or just skip.
-    // Let's assume we want to view them in "My Requests", so we might need a test user ID.
-    // We'll skip requests for now or add them dynamically when a user signs up/makes a request.
 
     await batch.commit();
     console.log("Database seeded successfully!");
