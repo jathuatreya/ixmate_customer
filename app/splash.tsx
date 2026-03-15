@@ -81,7 +81,7 @@ export default function SplashScreen() {
           </View>
 
           {/* Text Content */}
-          <Text style={styles.title}>FixMate Lanka</Text>
+          <Text style={styles.title}>FixMate</Text>
           <Text style={styles.tagline}>Your Home, Our Priority</Text>
         </View>
 

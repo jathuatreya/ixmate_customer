@@ -14,29 +14,22 @@ export const seedDatabase = async () => {
         color: "#3b82f6",
       },
       {
-        id: "cat_electrical",
-        name: "Electrical",
-        icon: "electrical-services",
-        color: "#eab308",
-      },
-      {
         id: "cat_cleaning",
         name: "Cleaning",
         icon: "cleaning-services",
-        color: "#10b981",
+        color: "#a855f7",
       },
       {
         id: "cat_painting",
         name: "Painting",
         icon: "format-paint",
-        color: "#f97316",
+        color: "#ec4899",
       },
-      { id: "cat_hvac", name: "AC Repair", icon: "ac-unit", color: "#06b6d4" },
       {
-        id: "cat_moving",
-        name: "Moving",
-        icon: "local-shipping",
-        color: "#8b5cf6",
+        id: "cat_masonry",
+        name: "Masonry",
+        icon: "architecture",
+        color: "#14b8a6",
       },
     ];
 

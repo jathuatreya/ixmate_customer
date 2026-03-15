@@ -298,7 +298,7 @@ export default function ProfileScreen() {
 
           <View style={styles.versionInfo}>
             <Text style={[styles.versionRef, { color: THEME_COLORS.textSub }]}>
-              FIXMATE LANKA v3.0
+              FIXMATE v1.0
             </Text>
             <Text style={[styles.madeText, { color: THEME_COLORS.textSub }]}>
               Empowering Sri Lanka 🇱🇰

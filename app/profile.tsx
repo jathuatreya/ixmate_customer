@@ -270,7 +270,7 @@ export default function ProfileScreen() {
           </TouchableOpacity>
 
           <View style={styles.versionInfo}>
-            <Text style={styles.versionRef}>FIXMATE LANKA v3.0</Text>
+            <Text style={styles.versionRef}>FIXMATE v1.0</Text>
             <Text style={styles.madeText}>Empowering Sri Lanka 🇱🇰</Text>
           </View>
         </View>

@@ -111,8 +111,8 @@ export default function SelectProfessionalScreen() {
         }
       }
 
-      // Ensure we only show real workers, no dummy fallback
-      setWorkers(relevantWorkers.length > 0 ? relevantWorkers : list);
+      // Ensure we only show workers that match the selected category
+      setWorkers(relevantWorkers);
       setLoading(false);
     });
 

@@ -217,8 +217,14 @@ export default function PaymentScreen() {
                   },
                 ]}
                 value={cardNumber}
-                onChangeText={setCardNumber}
+                onChangeText={(text) => {
+                  let cleaned = text.replace(/\D/g, "");
+                  if (cleaned.length > 16) cleaned = cleaned.substring(0, 16);
+                  let formatted = cleaned.match(/.{1,4}/g)?.join(" ") || cleaned;
+                  setCardNumber(formatted);
+                }}
                 keyboardType="numeric"
+                maxLength={19}
                 placeholder="4111 1111 1111 1111"
                 placeholderTextColor={THEME_COLORS.textSub}
               />
@@ -241,9 +247,18 @@ export default function PaymentScreen() {
                     },
                   ]}
                   value={expiry}
-                  onChangeText={setExpiry}
+                  onChangeText={(text) => {
+                    let cleaned = text.replace(/\D/g, "");
+                    let formatted = cleaned;
+                    if (cleaned.length >= 2) {
+                      formatted = cleaned.substring(0, 2) + "/" + cleaned.substring(2, 4);
+                    }
+                    setExpiry(formatted);
+                  }}
                   placeholder="MM/YY"
                   placeholderTextColor={THEME_COLORS.textSub}
+                  maxLength={5}
+                  keyboardType="numeric"
                 />
               </View>
               <View style={[styles.inputBox, { flex: 1 }]}>
@@ -262,11 +277,17 @@ export default function PaymentScreen() {
                     },
                   ]}
                   value={cvv}
-                  onChangeText={setCvv}
+                  onChangeText={(text) => {
+                    const cleaned = text.replace(/\D/g, "");
+                    if (cleaned.length <= 3) {
+                      setCvv(cleaned);
+                    }
+                  }}
                   secureTextEntry
                   keyboardType="numeric"
                   placeholder="123"
                   placeholderTextColor={THEME_COLORS.textSub}
+                  maxLength={3}
                 />
               </View>
             </View>
@@ -314,10 +335,16 @@ export default function PaymentScreen() {
                   },
                 ]}
                 value={otp}
-                onChangeText={setOtp}
+                onChangeText={(text) => {
+                  const cleaned = text.replace(/\D/g, "");
+                  if (cleaned.length <= 6) {
+                    setOtp(cleaned);
+                  }
+                }}
                 keyboardType="numeric"
                 placeholder="123456"
                 placeholderTextColor={THEME_COLORS.textSub}
+                maxLength={6}
                 autoFocus
               />
             </View>

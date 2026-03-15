@@ -130,7 +130,7 @@ export default function LoginScreen() {
           </View>
 
           {/* App Name & Tagline */}
-          <Text style={styles.appName}>Fix Mate</Text>
+          <Text style={styles.appName}>FixMate</Text>
           <Text style={styles.tagline}>Welcome Back</Text>
         </View>
 

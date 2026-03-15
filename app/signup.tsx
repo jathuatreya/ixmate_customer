@@ -178,7 +178,7 @@ export default function SignupScreen() {
           </View>
 
           {/* App Name & Tagline */}
-          <Text style={styles.appName}>Fix Mate </Text>
+          <Text style={styles.appName}>FixMate</Text>
           <Text style={styles.tagline}>Premium Home Services</Text>
         </View>
 

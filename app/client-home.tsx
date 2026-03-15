@@ -47,10 +47,11 @@ export default function ClientDashboard() {
   // const THEME_COLORS = getColors(theme);
   // const isDark = theme === "dark";
   const { user } = useSession();
-  const { clearRequestData } = useRequest();
+  const { clearRequestData, updateRequestData } = useRequest();
   const [searchQuery, setSearchQuery] = React.useState("");
   const [activeRequest, setActiveRequest] = React.useState<any>(null);
   const [recentRequests, setRecentRequests] = React.useState<any[]>([]);
+  const [availableJobs, setAvailableJobs] = React.useState<any[]>([]);
 
   // Fetch Data
   React.useEffect(() => {
@@ -94,23 +95,39 @@ export default function ClientDashboard() {
       setRecentRequests(list.slice(0, 2));
     });
 
+    // 3. Listen for Available Jobs (Universal pending requests)
+    const jobsQ = query(
+      collection(db, "requests"),
+      where("status", "==", "pending"),
+      limit(20)
+    );
+
+    const unsubJobs = onSnapshot(jobsQ, (snapshot) => {
+      const list = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setAvailableJobs(list);
+    });
+
     return () => {
       unsubActive();
       unsubHistory();
+      unsubJobs();
     };
   }, [user?._id]);
 
   const categories = [
-    { id: 1, name: "Electrical", icon: "lightbulb", color: "#f97316" },
-    { id: 2, name: "Plumbing", icon: "plumbing", color: "#3b82f6" },
-    { id: 3, name: "AC Repair", icon: "ac-unit", color: "#06b6d4" },
-    { id: 4, name: "Cleaning", icon: "cleaning-services", color: "#a855f7" },
-    { id: 5, name: "Painting", icon: "format-paint", color: "#ec4899" },
+    { id: "2", name: "Plumbing", icon: "plumbing", color: "#3b82f6" },
+    { id: "4", name: "Cleaning", icon: "cleaning-services", color: "#a855f7" },
+    { id: "5", name: "Painting", icon: "format-paint", color: "#ec4899" },
+    { id: "7", name: "Masonry", icon: "architecture", color: "#14b8a6" },
   ];
 
-  const filteredCategories = categories.filter((cat) =>
-    cat.name.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  const allowedCategories = ["plumbing", "cleaning", "painting", "masonry"];
+
+  const searchResults = searchQuery
+    ? categories.filter((cat) =>
+        cat.name.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : [];
 
   return (
     <View style={[styles.container, { backgroundColor: COLORS.background }]}>
@@ -181,12 +198,58 @@ export default function ClientDashboard() {
                 </View>
                 <TextInput autoComplete='off' autoCorrect={false} spellCheck={false}
                   style={[styles.searchInput, { color: "white" }]}
-                  placeholder="Find a service (e.g. Mason)"
+                  placeholder="Find a service..."
                   placeholderTextColor="rgba(209, 250, 229, 0.6)"
                   value={searchQuery}
                   onChangeText={setSearchQuery}
                 />
               </View>
+
+              {/* Search Results Dropdown Overlay */}
+              {searchQuery.length > 0 && (
+                <View style={{
+                  position: 'absolute',
+                  top: 170,
+                  left: 24,
+                  right: 24,
+                  backgroundColor: COLORS.surface,
+                  borderRadius: 12,
+                  padding: 8,
+                  borderWidth: 1,
+                  borderColor: COLORS.border,
+                  zIndex: 999,
+                }}>
+                  {searchResults.length > 0 ? (
+                    searchResults.map((item, index) => (
+                      <TouchableOpacity
+                        key={item.id}
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          padding: 12,
+                          borderBottomWidth: index < searchResults.length - 1 ? 1 : 0,
+                          borderBottomColor: COLORS.border,
+                        }}
+                        onPress={() => {
+                          updateRequestData({ serviceType: item.name });
+                          setSearchQuery("");
+                          router.push("/create-request");
+                        }}
+                      >
+                        <MaterialIcons name={item.icon as any} size={20} color={item.color} style={{ marginRight: 12 }} />
+                        <View style={{ flex: 1 }}>
+                          <Text style={{ color: COLORS.text, fontSize: 16 }}>{item.name}</Text>
+                        </View>
+                        <MaterialIcons name="chevron-right" size={20} color={COLORS.textSub} />
+                      </TouchableOpacity>
+                    ))
+                  ) : (
+                    <View style={{ padding: 20, alignItems: "center" }}>
+                      <Text style={{ color: COLORS.textSub }}>No available jobs found</Text>
+                    </View>
+                  )}
+                </View>
+              )}
             </SafeAreaView>
           </LinearGradient>
         </View>
@@ -235,13 +298,13 @@ export default function ClientDashboard() {
             </TouchableOpacity>
           </View>
 
-          {filteredCategories.length > 0 ? (
+          {categories.length > 0 ? (
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.categoriesScroll}
             >
-              {filteredCategories.map((cat) => (
+              {categories.map((cat) => (
                 <TouchableOpacity
                   key={cat.id}
                   style={[

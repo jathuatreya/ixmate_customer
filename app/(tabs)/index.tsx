@@ -43,30 +43,25 @@ const SCREEN_WIDTH = Dimensions.get("window").width;
 export default function ClientDashboard() {
   const router = useRouter();
   const { user } = useSession();
-  const { clearRequestData } = useRequest();
+  const { clearRequestData, updateRequestData } = useRequest();
   const [searchQuery, setSearchQuery] = React.useState("");
   const [activeRequest, setActiveRequest] = React.useState<any>(null);
   const [recentRequests, setRecentRequests] = React.useState<any[]>([]);
 
+  const [availableJobs, setAvailableJobs] = React.useState<any[]>([]);
+
   const dummyServices = [
-    {
-      id: "1",
-      name: "Electrician",
-      icon: "electrical-services",
-      color: "#f97316",
-    },
     { id: "2", name: "Plumbing", icon: "plumbing", color: "#3b82f6" },
-    { id: "3", name: "AC Repair", icon: "ac-unit", color: "#06b6d4" },
     { id: "4", name: "Cleaning", icon: "cleaning-services", color: "#a855f7" },
     { id: "5", name: "Painting", icon: "format-paint", color: "#ec4899" },
-    { id: "6", name: "Carpentry", icon: "handyman", color: "#8b5cf6" },
     { id: "7", name: "Masonry", icon: "architecture", color: "#14b8a6" },
-    { id: "8", name: "CCTV Installation", icon: "videocam", color: "#ef4444" },
   ];
+
+  const allowedCategories = ["plumbing", "cleaning", "painting", "masonry"];
 
   const searchResults = searchQuery
     ? dummyServices.filter((s) =>
-        s.name.toLowerCase().includes(searchQuery.toLowerCase()),
+        s.name.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : [];
 
@@ -112,9 +107,23 @@ export default function ClientDashboard() {
       setRecentRequests(list.slice(0, 2));
     });
 
+    // 3. Listen for Available Jobs (Universal pending requests)
+    const jobsQ = query(
+      collection(db, "requests"),
+      where("status", "==", "pending"),
+      limit(20)
+    );
+
+    const unsubJobs = onSnapshot(jobsQ, (snapshot) => {
+      const list = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      // Filter out unwanted types if necessary, though they should be hidden anyway if they aren't available
+      setAvailableJobs(list);
+    });
+
     return () => {
       unsubActive();
       unsubHistory();
+      unsubJobs();
     };
   }, [user?._id]);
 
@@ -174,7 +183,7 @@ export default function ClientDashboard() {
                   autoCorrect={false}
                   spellCheck={false}
                   style={styles.searchInput}
-                  placeholder="Find a service (e.g. Electrician)"
+                  placeholder="Find a service..."
                   placeholderTextColor="rgba(209, 250, 229, 0.6)"
                   value={searchQuery}
                   onChangeText={setSearchQuery}
@@ -217,7 +226,7 @@ export default function ClientDashboard() {
                       borderBottomColor: COLORS.border,
                     }}
                     onPress={() => {
-                      clearRequestData();
+                      updateRequestData({ serviceType: item.name });
                       setSearchQuery("");
                       router.push("/create-request");
                     }}

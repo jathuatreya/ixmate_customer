@@ -199,10 +199,9 @@ export default function PaymentMethodsScreen() {
                 maxLength={19}
                 value={cardNumber}
                 onChangeText={(text) => {
-                  let formatted = text.replace(/\D/g, "");
-                  if (formatted.length > 0) {
-                    formatted = formatted.match(/.{1,4}/g)?.join(" ") || "";
-                  }
+                  let cleaned = text.replace(/\D/g, "");
+                  if (cleaned.length > 16) cleaned = cleaned.substring(0, 16);
+                  let formatted = cleaned.match(/.{1,4}/g)?.join(" ") || cleaned;
                   setCardNumber(formatted);
                 }}
               />
@@ -227,12 +226,10 @@ export default function PaymentMethodsScreen() {
                   maxLength={5}
                   value={expiry}
                   onChangeText={(text) => {
-                    let formatted = text.replace(/\D/g, "");
-                    if (formatted.length >= 2) {
-                      formatted =
-                        formatted.substring(0, 2) +
-                        "/" +
-                        formatted.substring(2, 4);
+                    let cleaned = text.replace(/\D/g, "");
+                    let formatted = cleaned;
+                    if (cleaned.length >= 2) {
+                      formatted = cleaned.substring(0, 2) + "/" + cleaned.substring(2, 4);
                     }
                     setExpiry(formatted);
                   }}
@@ -256,7 +253,12 @@ export default function PaymentMethodsScreen() {
                   maxLength={3}
                   secureTextEntry
                   value={cvv}
-                  onChangeText={setCvv}
+                  onChangeText={(text) => {
+                    const cleaned = text.replace(/\D/g, "");
+                    if (cleaned.length <= 3) {
+                      setCvv(cleaned);
+                    }
+                  }}
                 />
               </View>
             </View>
