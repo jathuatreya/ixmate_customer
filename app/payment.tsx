@@ -1,6 +1,6 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc, addDoc, collection } from "firebase/firestore";
 import md5 from "md5";
 import React, { useState } from "react";
 import {
@@ -82,52 +82,80 @@ export default function PaymentScreen() {
     }
 
     setLoading(true);
-    try {
-      const finalAmount = parseFloat(amountInput) || 0;
-      
-      if (id) {
-        // Update request status
-        await updateDoc(doc(db, "requests", id as string), {
-          status: "paid",
-          paidAmount: finalAmount,
-          paymentDate: new Date(),
-        });
+    
+    // Safety timeout for Firestore operations
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Request timed out. Please check your connection.")), 10000)
+    );
 
-        // Store payment record in db
-        const { addDoc, collection } = await import("firebase/firestore");
-        await addDoc(collection(db, "payments"), {
-          requestId: id,
-          jobId: id,
-          workerId: workerId || null,
-          status: "completed",
-          userId: user?._id || "guest",
-          amount: finalAmount,
-          serviceType: serviceType || "FixMate Service",
-          paymentMethod: "card",
-          timestamp: new Date(),
-          cardLast4: cardNumber.slice(-4),
-        });
+    try {
+      // Robust decimal parsing
+      const cleanAmount = amountInput.replace(/[^0-9.]/g, '');
+      const finalAmount = parseFloat(cleanAmount) || 0;
+      
+      const requestId = Array.isArray(id) ? id[0] : id;
+
+      if (!requestId || requestId === "undefined") {
+         console.warn("No valid Request ID provided for payment");
+         throw new Error("Missing request identification. Please restart the payment process.");
       }
 
-      setLoading(false);
-      Alert.alert(
-        "Payment Received!",
-        `LKR ${finalAmount.toFixed(2)} has been successfully processed.`,
-        [
-          {
-            text: "OK",
-            onPress: () => {
-              router.push({
-                pathname: "/payment-success",
-                params: { id: id as string, amount: finalAmount.toString() },
-              });
+      // Run firestore operations with a timeout
+      await Promise.race([
+        (async () => {
+          // Update request status
+          await updateDoc(doc(db, "requests", requestId as string), {
+            status: "paid",
+            paidAmount: finalAmount,
+            paymentDate: new Date(),
+          });
+
+          // Store payment record in db
+          await addDoc(collection(db, "payments"), {
+            requestId: requestId,
+            jobId: requestId,
+            workerId: workerId || null,
+            status: "completed",
+            userId: user?._id || "guest",
+            amount: finalAmount,
+            serviceType: serviceType || "FixMate Service",
+            paymentMethod: "card",
+            timestamp: new Date(),
+            cardLast4: cardNumber.replace(/\s/g, "").slice(-4),
+          });
+        })(),
+        timeoutPromise
+      ]);
+
+      setLoading(false); 
+      
+      // Short delay to ensure state update propagates before alert/transition
+      setTimeout(() => {
+        Alert.alert(
+          "Payment Received!",
+          `LKR ${finalAmount.toFixed(2)} has been successfully processed.`,
+          [
+            {
+              text: "OK",
+              onPress: () => {
+                router.push({
+                  pathname: "/payment-success",
+                  params: { id: requestId as string, amount: finalAmount.toString() },
+                });
+              },
             },
-          },
-        ]
-      );
+          ]
+        );
+      }, 50);
+
     } catch (error: any) {
-      Alert.alert("Error", error.message);
+      console.error("Payment verification error:", error);
       setLoading(false);
+      
+      // Delay error alert slightly too
+      setTimeout(() => {
+        Alert.alert("Error", error.message || "Failed to process payment");
+      }, 50);
     }
   };
 

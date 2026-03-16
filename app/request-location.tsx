@@ -71,14 +71,14 @@ export default function RequestLocationScreen() {
   const [isFlexible, setIsFlexible] = useState(requestData.isFlexible || false);
   const [district, setDistrict] = useState(requestData.district || user?.district || "");
   const [showDistrictPicker, setShowDistrictPicker] = useState(false);
+  const [showTimeDropdown, setShowTimeDropdown] = useState(false);
 
-  const timeSuggestions = [
-    "08:00 AM",
-    "10:00 AM",
-    "12:00 PM",
-    "02:00 PM",
-    "04:00 PM",
-    "06:00 PM",
+  const timeSlots = [
+    "07:00 AM", "07:30 AM", "08:00 AM", "08:30 AM", "09:00 AM", "09:30 AM",
+    "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM", "12:00 PM", "12:30 PM",
+    "01:00 PM", "01:30 PM", "02:00 PM", "02:30 PM", "03:00 PM", "03:30 PM",
+    "04:00 PM", "04:30 PM", "05:00 PM", "05:30 PM", "06:00 PM", "06:30 PM",
+    "07:00 PM", "07:30 PM", "08:00 PM", "08:30 PM", "09:00 PM"
   ];
 
   const handleNext = () => {
@@ -297,55 +297,76 @@ export default function RequestLocationScreen() {
           <View style={[styles.sectionHeader, { marginTop: 32 }]}>
             <Text style={styles.sectionTitle}>Preferred time</Text>
             <Text style={styles.sectionSubtitle}>
-              Type or select a suggestion
+              Select a preferred arrival time
             </Text>
           </View>
 
-          <View style={styles.timeInputContainer}>
-            <View style={styles.customInputWrapper}>
-              <Clock size={20} color={COLORS.primary} />
-              <TextInput autoComplete='off' autoCorrect={false} spellCheck={false}
-                style={styles.customInputLarge}
-                placeholder="e.g. 10:30 AM"
-                placeholderTextColor="#94a3b8"
-                value={customTime}
-                onChangeText={setCustomTime}
-              />
-            </View>
-          </View>
-
-          <View style={styles.suggestionsHeader}>
-            <Text style={styles.suggestionTitle}>Suggestions:</Text>
-          </View>
-
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.suggestionsScroll}
-            contentContainerStyle={styles.suggestionsContent}
+          <TouchableOpacity
+            style={styles.pickerButton}
+            onPress={() => setShowTimeDropdown(true)}
           >
-            {timeSuggestions.map((slot) => (
-              <TouchableOpacity
-                key={slot}
+            <View style={[styles.pickerIconBg, { backgroundColor: "#eff6ff" }]}>
+              <Clock size={20} color="#3b82f6" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.pickerLabel}>Arrival Time</Text>
+              <Text
                 style={[
-                  styles.suggestionChip,
-                  customTime === slot && styles.suggestionChipSelected,
+                  styles.pickerValue,
+                  !customTime && styles.placeholderValue,
                 ]}
-                onPress={() => {
-                  setCustomTime(slot);
-                }}
               >
-                <Text
-                  style={[
-                    styles.suggestionText,
-                    customTime === slot && styles.suggestionTextSelected,
-                  ]}
-                >
-                  {slot}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+                {customTime || "Select Time"}
+              </Text>
+            </View>
+            <ChevronDown size={20} color="#cbd5e1" />
+          </TouchableOpacity>
+
+          {/* Time Picker Modal */}
+          <Modal
+            visible={showTimeDropdown}
+            transparent={true}
+            animationType="slide"
+            onRequestClose={() => setShowTimeDropdown(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={[styles.modalContent, { backgroundColor: COLORS.surface }]}>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>Select Arrival Time</Text>
+                  <TouchableOpacity onPress={() => setShowTimeDropdown(false)}>
+                    <MaterialIcons name="close" size={24} color={COLORS.textMain} />
+                  </TouchableOpacity>
+                </View>
+                <ScrollView contentContainerStyle={styles.districtList}>
+                  {timeSlots.map((slot) => (
+                    <TouchableOpacity
+                      key={slot}
+                      style={[
+                        styles.districtItem,
+                        customTime === slot && { backgroundColor: COLORS.primary + "20" },
+                      ]}
+                      onPress={() => {
+                        setCustomTime(slot);
+                        setShowTimeDropdown(false);
+                      }}
+                    >
+                      <Text
+                        style={[
+                          styles.districtText,
+                          { color: customTime === slot ? COLORS.primary : COLORS.textMain },
+                        ]}
+                      >
+                        {slot}
+                      </Text>
+                      {customTime === slot && (
+                        <MaterialIcons name="check" size={20} color={COLORS.primary} />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            </View>
+          </Modal>
 
           {/* Flexible Toggle */}
           <View style={styles.flexibleContainer}>

@@ -1,4 +1,5 @@
 import { MaterialIcons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import {
@@ -20,6 +21,7 @@ import {
   Loader2,
   MapPin,
   ShieldCheck,
+  Image as ImageIcon,
 } from "lucide-react-native";
 import React, { useState } from "react";
 import {
@@ -98,7 +100,7 @@ export default function ReviewRequestScreen() {
       // Clean requestData of undefined values
       const sanitizedData = Object.entries(requestData).reduce(
         (acc: any, [key, value]) => {
-          if (value !== undefined) acc[key] = value;
+          if (value !== undefined && key !== "photos") acc[key] = value;
           return acc;
         },
         {},
@@ -290,6 +292,35 @@ export default function ReviewRequestScreen() {
                 </Text>
               </View>
             </View>
+
+            {requestData.photos && requestData.photos.length > 0 && (
+              <>
+                <View style={styles.divider} />
+                <View style={styles.detailsRow}>
+                  <View style={styles.detailItem}>
+                    <View style={styles.detailLabelRow}>
+                      <ImageIcon size={14} color={COLORS.textSub} />
+                      <Text style={styles.detailLabel}>Photos ({requestData.photos.length})</Text>
+                    </View>
+                    <ScrollView 
+                      horizontal 
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={styles.photoSummaryList}
+                    >
+                      {requestData.photos.map((photo, index) => (
+                        <View key={index} style={styles.photoSummaryItem}>
+                          <Image 
+                            source={{ uri: photo }} 
+                            style={styles.photoSummaryImage}
+                            contentFit="cover"
+                          />
+                        </View>
+                      ))}
+                    </ScrollView>
+                  </View>
+                </View>
+              </>
+            )}
 
             <View style={styles.detailsRow}>
               <View style={styles.detailItem}>
@@ -804,6 +835,22 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#0f766e",
     lineHeight: 18,
+  },
+  photoSummaryList: {
+    gap: 8,
+    paddingTop: 8,
+  },
+  photoSummaryItem: {
+    width: 64,
+    height: 64,
+    borderRadius: 12,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  photoSummaryImage: {
+    width: "100%",
+    height: "100%",
   },
   continueButtonContainer: {
     marginTop: 24,

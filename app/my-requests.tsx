@@ -96,6 +96,48 @@ export default function MyRequestsScreen() {
     return THEME_COLORS.surface;
   };
 
+  const getProgressPercentage = (status: string) => {
+    const s = status?.toLowerCase() || "";
+    switch (s) {
+      case "pending":
+        return 10;
+      case "accepted":
+        return 30;
+      case "active":
+      case "in_progress":
+        return 60;
+      case "completed":
+        return 90;
+      case "paid":
+        return 100;
+      case "cancelled":
+        return 0;
+      default:
+        return 0;
+    }
+  };
+
+  const getPhaseDescription = (status: string) => {
+    const s = status?.toLowerCase() || "";
+    switch (s) {
+      case "pending":
+        return "Finding Professional";
+      case "accepted":
+        return "Worker Confirmed";
+      case "active":
+      case "in_progress":
+        return "At Work Site";
+      case "completed":
+        return "Service Finished";
+      case "paid":
+        return "Transaction Done";
+      case "cancelled":
+        return "Job Cancelled";
+      default:
+        return "Processing";
+    }
+  };
+
 
   const filteredRequests = requests.filter((req) => {
     const matchesFilter = filter === "All" || req.status?.toLowerCase() === filter.toLowerCase();
@@ -298,6 +340,36 @@ export default function MyRequestsScreen() {
                   >
                     {item.status || "Pending"}
                   </Text>
+                </View>
+              </View>
+
+              {/* Progress Section */}
+              <View style={styles.progressSection}>
+                <View style={styles.progressRow}>
+                  <Text style={[styles.progressLabel, { color: getStatusColor(item.status) }]}>
+                    {getPhaseDescription(item.status)}
+                  </Text>
+                  <Text
+                    style={[styles.progressValue, { color: THEME_COLORS.textSub }]}
+                  >
+                    {getProgressPercentage(item.status)}%
+                  </Text>
+                </View>
+                <View
+                  style={[
+                    styles.progressBarBg,
+                    { backgroundColor: THEME_COLORS.border },
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.progressBarFill,
+                      {
+                        width: `${getProgressPercentage(item.status)}%`,
+                        backgroundColor: getStatusColor(item.status),
+                      },
+                    ]}
+                  />
                 </View>
               </View>
 

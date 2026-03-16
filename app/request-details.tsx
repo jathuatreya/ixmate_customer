@@ -1,4 +1,6 @@
 import { MaterialIcons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
+import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { AlertCircle, ArrowRight, FileText } from "lucide-react-native";
@@ -40,7 +42,6 @@ export default function RequestDetailsScreen() {
   const [urgency, setUrgency] = useState<UrgencyLevel>(
     requestData.urgency || "normal",
   );
-  // Mock photos for now, ideally string URIs
   const [photos, setPhotos] = useState<string[]>(requestData.photos || []);
 
   const handleNext = () => {
@@ -58,17 +59,40 @@ export default function RequestDetailsScreen() {
       );
       return;
     }
-    setRequestData({ ...requestData, description, urgency, budget });
+    setRequestData({ ...requestData, description, urgency, budget, photos });
     router.push("/request-location");
   };
 
-  const handleAddPhoto = () => {
-    // Mock photo add
-    if (photos.length < 5) {
-      setPhotos([...photos, `mock-photo-${photos.length + 1}`]);
-    } else {
+  const handleAddPhoto = async () => {
+    if (photos.length >= 5) {
       Alert.alert("Limit Reached", "You can only add up to 5 photos.");
+      return;
     }
+
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        "Permission Denied",
+        "Sorry, we need camera roll permissions to make this work!",
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsMultipleSelection: true,
+      quality: 0.7,
+      selectionLimit: 5 - photos.length,
+    });
+
+    if (!result.canceled) {
+      const selectedUris = result.assets.map((asset) => asset.uri);
+      setPhotos([...photos, ...selectedUris]);
+    }
+  };
+
+  const removePhoto = (index: number) => {
+    setPhotos(photos.filter((_, i) => i !== index));
   };
 
   return (
@@ -160,6 +184,48 @@ export default function RequestDetailsScreen() {
               onChangeText={setBudget}
             />
           </View>
+
+          {/* Photo Section */}
+          <View style={[styles.sectionHeader, { marginTop: 24 }]}>
+            <Text style={styles.sectionTitle}>Add Photos</Text>
+            <Text style={styles.sectionSubtitle}>
+              Upload up to 5 photos of the issue
+            </Text>
+          </View>
+
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.photoList}>
+            <TouchableOpacity 
+              style={[
+                styles.addPhotoBtn, 
+                { 
+                  backgroundColor: COLORS.surface, 
+                  borderStyle: 'dashed', 
+                  borderWidth: 1, 
+                  borderColor: COLORS.primary 
+                }
+              ]} 
+              onPress={handleAddPhoto}
+            >
+              <MaterialIcons name="add-a-photo" size={24} color={COLORS.primary} />
+              <Text style={styles.addPhotoText}>Add Photo</Text>
+            </TouchableOpacity>
+
+            {photos.map((photo, index) => (
+              <View key={index} style={styles.photoItem}>
+                <Image 
+                  source={{ uri: photo }} 
+                  style={{ width: '100%', height: '100%' }}
+                  contentFit="cover"
+                />
+                <TouchableOpacity 
+                  style={styles.removePhoto}
+                  onPress={() => removePhoto(index)}
+                >
+                  <MaterialIcons name="close" size={16} color="white" />
+                </TouchableOpacity>
+              </View>
+            ))}
+          </ScrollView>
 
           {/* Urgency Section */}
           <View style={[styles.sectionHeader, { marginTop: 24 }]}>

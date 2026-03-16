@@ -9,10 +9,12 @@ import {
   Animated,
   Dimensions,
   Image,
+  Modal,
   Platform,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -50,6 +52,10 @@ export default function RequestStatusScreen() {
   const [request, setRequest] = useState<any>(null);
   const [worker, setWorker] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [review, setReview] = useState("");
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
   // Animation for finding worker
   const pulseAnim = useRef(new Animated.Value(0)).current;
@@ -112,6 +118,45 @@ export default function RequestStatusScreen() {
     );
     return () => workerUnsub();
   }, [request?.workerId]);
+
+  const handleConfirmWork = async () => {
+    try {
+      await updateDoc(doc(db, "requests", id as string), {
+        isConfirmed: true,
+        confirmedAt: new Date().toISOString(),
+      });
+      setShowRatingModal(true);
+    } catch (e: any) {
+      Alert.alert("Error", e.message);
+    }
+  };
+
+  const handleSubmitReview = async () => {
+    if (rating === 0) {
+      Alert.alert("Rating Required", "Please select a rating before submitting.");
+      return;
+    }
+
+    setIsSubmittingReview(true);
+    try {
+      // Update request with rating and review
+      await updateDoc(doc(db, "requests", id as string), {
+        rating,
+        review,
+        ratedAt: new Date().toISOString(),
+      });
+
+      // Also update worker's average rating (simplified for now)
+      // In a real app, you'd use a Cloud Function to recalculate
+      
+      Alert.alert("Thank you!", "Your review has been submitted.");
+      setShowRatingModal(false);
+    } catch (e: any) {
+      Alert.alert("Error", e.message);
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
 
   const handleCancel = async () => {
     Alert.alert(
@@ -494,6 +539,27 @@ export default function RequestStatusScreen() {
               "{request.description || "No description provided."}"
             </Text>
           </View>
+
+          {request.photos && request.photos.length > 0 && (
+            <View style={{ marginTop: 16 }}>
+              <Text style={[styles.miniLabel, { color: THEME_COLORS.textSub, marginBottom: 8 }]}>
+                Attached Photos
+              </Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+                {request.photos.map((photo: string, index: number) => (
+                  <TouchableOpacity key={index} onPress={() => {
+                    // Could add a full screen image viewer here
+                    Alert.alert("Image View", "Full screen viewer could be opened here.");
+                  }}>
+                    <Image 
+                      source={{ uri: photo }} 
+                      style={{ width: 100, height: 100, borderRadius: 8, borderWidth: 1, borderColor: THEME_COLORS.border }} 
+                    />
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
         </View>
 
         {/* Assigned Pro */}
@@ -711,21 +777,21 @@ export default function RequestStatusScreen() {
                 </View>
               </View>
 
-              {request.status === "completed" && (
+              {request.status === "completed" && !request.isConfirmed && (
                 <View style={styles.userConfirmationBox}>
                   <Text style={[styles.confirmTitle, { color: THEME_COLORS.textMain }]}>
                     Everything looks good?
                   </Text>
                   <Text style={[styles.confirmSub, { color: THEME_COLORS.textSub }]}>
-                    Please confirm if you are satisfied with the work details above before proceeding to payment.
+                    Please confirm if you are satisfied with the work details above to complete the process.
                   </Text>
                   <View style={styles.actionGrid}>
                     <TouchableOpacity 
                       style={[styles.smallActionBtn, { backgroundColor: "rgba(16, 185, 129, 0.1)" }]}
-                      onPress={() => Alert.alert("Confirmed", "You have confirmed the work report. You can now proceed to payment.")}
+                      onPress={handleConfirmWork}
                     >
                       <MaterialIcons name="check" size={20} color={THEME_COLORS.primary} />
-                      <Text style={[styles.smallActionText, { color: THEME_COLORS.primary }]}>Confirm</Text>
+                      <Text style={[styles.smallActionText, { color: THEME_COLORS.primary }]}>Confirm Work</Text>
                     </TouchableOpacity>
                     <TouchableOpacity 
                       style={[styles.smallActionBtn, { backgroundColor: "rgba(239, 68, 68, 0.1)" }]}
@@ -747,7 +813,26 @@ export default function RequestStatusScreen() {
                       <Text style={[styles.smallActionText, { color: "#ef4444" }]}>Issue</Text>
                     </TouchableOpacity>
                   </View>
+                </View>
+              )}
 
+              {request.isConfirmed && !request.rating && (
+                <View style={[styles.userConfirmationBox, { borderTopColor: COLORS.primary }]}>
+                  <View style={styles.proTitleRow}>
+                    <MaterialIcons name="stars" size={20} color={COLORS.primary} />
+                    <Text style={[styles.confirmTitle, { color: THEME_COLORS.textMain, marginLeft: 8 }]}>
+                      Work Confirmed!
+                    </Text>
+                  </View>
+                  <Text style={[styles.confirmSub, { color: THEME_COLORS.textSub, marginTop: 4 }]}>
+                    You have confirmed the work. Would you like to leave a review for {worker?.name || "the worker"}?
+                  </Text>
+                  <TouchableOpacity 
+                    style={[styles.smallActionBtn, { backgroundColor: COLORS.primary, marginTop: 12, width: '100%', justifyContent: 'center' }]}
+                    onPress={() => setShowRatingModal(true)}
+                  >
+                    <Text style={{ color: 'white', fontWeight: 'bold' }}>Rate Worker</Text>
+                  </TouchableOpacity>
                 </View>
               )}
             </View>
@@ -929,6 +1014,64 @@ export default function RequestStatusScreen() {
       </ScrollView>
 
       <BottomNavbar />
+
+      {/* Rating Modal */}
+      <Modal
+        visible={showRatingModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowRatingModal(false)}
+      >
+        <View style={styles.ratingOverlay}>
+          <View style={[styles.ratingModalContent, { backgroundColor: THEME_COLORS.surface }]}>
+            <Text style={[styles.ratingTitle, { color: THEME_COLORS.textMain }]}>How was your experience?</Text>
+            <Text style={[styles.ratingSub, { color: THEME_COLORS.textSub }]}>Rate your experience with {worker?.name || "our professional"}</Text>
+            
+            <View style={styles.starsRow}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <TouchableOpacity key={star} onPress={() => setRating(star)}>
+                  <MaterialIcons 
+                    name={rating >= star ? "star" : "star-outline"} 
+                    size={40} 
+                    color={rating >= star ? "#eab308" : THEME_COLORS.textSub} 
+                  />
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <TextInput autoComplete='off' autoCorrect={false} spellCheck={false}
+              style={[styles.reviewInput, { color: THEME_COLORS.textMain, borderColor: THEME_COLORS.border }]}
+              placeholder="Share more details about the work (optional)..."
+              placeholderTextColor={THEME_COLORS.textSub}
+              multiline
+              numberOfLines={4}
+              value={review}
+              onChangeText={setReview}
+            />
+
+            <View style={styles.ratingActionRow}>
+              <TouchableOpacity 
+                style={[styles.ratingBtn, { backgroundColor: THEME_COLORS.background }]} 
+                onPress={() => setShowRatingModal(false)}
+              >
+                <Text style={{ color: THEME_COLORS.textSub }}>Skip</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.ratingBtn, { backgroundColor: COLORS.primary }]} 
+                onPress={handleSubmitReview}
+                disabled={isSubmittingReview}
+              >
+                {isSubmittingReview ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <Text style={{ color: 'white', fontWeight: 'bold' }}>Submit Review</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -1552,5 +1695,61 @@ const styles = StyleSheet.create({
     color: "#10B981",
     fontSize: 18,
     fontWeight: "bold",
+  },
+  ratingOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  ratingModalContent: {
+    width: "100%",
+    borderRadius: 24,
+    padding: 24,
+    alignItems: "center",
+    elevation: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+  },
+  ratingTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  ratingSub: {
+    fontSize: 14,
+    textAlign: "center",
+    marginBottom: 24,
+  },
+  starsRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 24,
+  },
+  reviewInput: {
+    width: "100%",
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 16,
+    fontSize: 14,
+    textAlignVertical: "top",
+    marginBottom: 24,
+    minHeight: 120,
+  },
+  ratingActionRow: {
+    flexDirection: "row",
+    gap: 12,
+    width: "100%",
+  },
+  ratingBtn: {
+    flex: 1,
+    height: 50,
+    borderRadius: 15,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
