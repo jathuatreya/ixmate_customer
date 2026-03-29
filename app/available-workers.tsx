@@ -61,16 +61,17 @@ export default function SelectProfessionalScreen() {
   }, []);
 
   useEffect(() => {
-    // Query users collection for workers
-    const q = query(collection(db, "users"));
+    // Query users collection for workers with server-side filtering
+    // This is important for security rules to work correctly
+    const q = query(
+      collection(db, "users"),
+      where("role", "in", ["worker", "Worker"])
+    );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const list = snapshot.docs
         .map((doc) => {
           const data = doc.data();
-          // Filter only workers
-          if (data.role?.toLowerCase() !== "worker") return null;
-
           return {
             id: doc.id,
             ...data,
@@ -89,11 +90,13 @@ export default function SelectProfessionalScreen() {
             distance: data.distance || "1.5 km",
             experience: data.experience || "3+ yrs",
           };
-        })
-        .filter((w) => w !== null);
+        });
 
       // Show all workers as requested
       setWorkers(list);
+      setLoading(false);
+    }, (error) => {
+      console.error("Error fetching workers:", error);
       setLoading(false);
     });
 

@@ -1,0 +1,16 @@
+﻿
+ID                       2ece3038-d966-4b13-8077-0926e7cd27a0
+Platform                 Android
+Status                   errored
+Profile                  preview
+Distribution             internal
+SDK Version              54.0.0
+Version                  1.0.0
+Version code             1
+Commit                   a96102d0f0ba41f9f89b5e6c67b0eeb51a962a60
+Logs                     https://expo.dev/accounts/athvik/projects/fixmate/builds/2ece3038-d966-4b13-8077-0926e7cd27a0
+Application Archive URL  null
+Build Artifacts URL      null
+Started at               17/03/2026, 06.29.30
+Finished at              17/03/2026, 06.33.31
+Started by               athvik

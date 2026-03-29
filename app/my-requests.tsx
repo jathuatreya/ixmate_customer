@@ -73,6 +73,9 @@ export default function MyRequestsScreen() {
       // Sort locally by created date if needed, or rely on index if complex
       setRequests(fetchedRequests);
       setLoading(false);
+    }, (error) => {
+      console.error("My Requests Error:", error);
+      setLoading(false);
     });
 
     return () => unsubscribe();

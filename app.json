@@ -10,10 +10,10 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.jathu.fixmate"
+      "bundleIdentifier": "com.athvik.fixmate"
     },
     "android": {
-      "package": "com.jathu.fixmate",
+      "package": "com.athvik.fixmate",
       "adaptiveIcon": {
         "backgroundColor": "#020617",
         "foregroundImage": "./assets/images/logo.png",
@@ -50,8 +50,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "7dae3e93-7753-41ef-987e-6138fa62585f"
+        "projectId": "e31594d9-ee29-43cd-9d86-b65412b9359c"
       }
-    }
+    },
+    "owner": "athvik"
   }
 }

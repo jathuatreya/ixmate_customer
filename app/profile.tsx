@@ -50,6 +50,8 @@ export default function ProfileScreen() {
       if (doc.exists()) {
         setUserData(doc.data());
       }
+    }, (error) => {
+      console.error("Profile Fetch Error:", error);
     });
 
     return () => unsubscribe();

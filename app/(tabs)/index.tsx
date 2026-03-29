@@ -88,6 +88,8 @@ export default function ClientDashboard() {
       } else {
         setActiveRequest(null);
       }
+    }, (error) => {
+      console.error("Dashboard Active Request Error:", error);
     });
 
     // 2. Listen for Recent History (limit 2)
@@ -106,24 +108,13 @@ export default function ClientDashboard() {
           (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0),
       );
       setRecentRequests(list.slice(0, 2));
-    });
-
-    // 3. Listen for Available Jobs (Universal pending requests)
-    const jobsQ = query(
-      collection(db, "requests"),
-      where("status", "==", "pending"),
-      limit(20)
-    );
-
-    const unsubJobs = onSnapshot(jobsQ, (snapshot) => {
-      const list = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setAvailableJobs(list);
+    }, (error) => {
+      console.error("Dashboard History Error:", error);
     });
 
     return () => {
       unsubActive();
       unsubHistory();
-      unsubJobs();
     };
   }, [user?._id]);
 

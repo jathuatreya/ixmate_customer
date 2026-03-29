@@ -1,0 +1,17 @@
+﻿
+ID                       a8d689ca-9fd0-4c0d-9ff1-4e5e459a95e8
+Platform                 Android
+Status                   in progress
+Profile                  preview
+Distribution             internal
+SDK Version              54.0.0
+Version                  1.0.0
+Version code             1
+Commit                   a96102d0f0ba41f9f89b5e6c67b0eeb51a962a60
+Logs                     https://expo.dev/accounts/paveshan03/projects/fixmate/builds/a8d689ca-9fd0-4c0d-9ff1-4e5e459a95e8
+Application Archive URL  <in progress>
+Build Artifacts URL      <in progress>
+Fingerprint              <in progress>
+Started at               17/03/2026, 05.39.56
+Finished at              <in progress>
+Started by               paveshan03

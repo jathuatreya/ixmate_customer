@@ -213,6 +213,23 @@ export default function PaymentScreen() {
           <Text style={styles.summaryService}>
             {serviceType || "FixMate Service"}
           </Text>
+
+          {/* Fee Breakdown */}
+          <View style={styles.breakdownBox}>
+             <View style={styles.breakdownRow}>
+                <Text style={styles.breakdownLabel}>Commission (10%)</Text>
+                <Text style={styles.breakdownValue}>LKR {(parseFloat(amountInput || "0") * 0.1).toFixed(2)}</Text>
+             </View>
+             <View style={styles.breakdownRow}>
+                <Text style={styles.breakdownLabel}>Tax (5%)</Text>
+                <Text style={styles.breakdownValue}>LKR {(parseFloat(amountInput || "0") * 0.05).toFixed(2)}</Text>
+             </View>
+             <View style={styles.paymentDivider} />
+             <View style={styles.breakdownRow}>
+                <Text style={[styles.breakdownLabel, { fontWeight: 'bold' }]}>Net Service Amount</Text>
+                <Text style={[styles.breakdownValue, { fontWeight: 'bold' }]}>LKR {(parseFloat(amountInput || "0") * 0.85).toFixed(2)}</Text>
+             </View>
+          </View>
         </View>
 
         {step === 1 ? (
@@ -484,5 +501,30 @@ const styles = StyleSheet.create({
     textAlign: "center",
     width: "100%",
     paddingVertical: 10,
+  },
+  breakdownBox: {
+    width: '100%',
+    marginTop: 15,
+    paddingTop: 15,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.1)',
+  },
+  breakdownRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  breakdownLabel: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 12,
+  },
+  breakdownValue: {
+    color: 'white',
+    fontSize: 12,
+  },
+  paymentDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    marginVertical: 8,
   },
 });

@@ -9,7 +9,19 @@
       "distribution": "internal"
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyAtmJxv6b2tzDh-whb1hAlrFtM4ErZ7oRs",
+        "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "fixmate-aa921.firebaseapp.com",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "fixmate-aa921",
+        "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "fixmate-aa921.firebasestorage.app",
+        "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "218097056756",
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:218097056756:web:752dbf6f5e87bd755217a1",
+        "EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID": "G-DS2EV277DX"
+      }
     },
     "production": {
       "autoIncrement": true

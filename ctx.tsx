@@ -93,7 +93,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    // Load cached user session first for "instant" appearance
+    // 1. Load cached session once on mount
     const loadCachedSession = async () => {
       try {
         const cachedUser = await AsyncStorage.getItem(USER_CACHE_KEY);
@@ -104,9 +104,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         console.error("Failed to load cached session", error);
       }
     };
-
     loadCachedSession();
 
+    // 2. Setup Firebase Auth listener
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         try {
@@ -138,12 +138,15 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
             await AsyncStorage.setItem(USER_CACHE_KEY, JSON.stringify(mappedUser));
           } else {
             // No profile found, force logout
+            console.warn("No profile found for uid:", firebaseUser.uid);
             await firebaseSignOut(auth);
             setUser(null);
+            await AsyncStorage.removeItem(USER_CACHE_KEY);
           }
         } catch (error) {
           console.error("Error fetching user role:", error);
           setUser(null);
+          // Don't remove cache on fetch error (might be transient network issue)
         }
       } else {
         setUser(null);
@@ -152,8 +155,16 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(false);
     });
 
-    return () => unsubscribe();
-  }, []);
+    // 3. Safety timeout
+    const timeout = setTimeout(() => {
+      setIsLoading(false);
+    }, 6000);
+
+    return () => {
+      unsubscribe();
+      clearTimeout(timeout);
+    };
+  }, []); // Only run on mount
 
   useProtectedRoute(user, isLoading);
 

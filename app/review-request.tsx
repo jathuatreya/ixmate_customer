@@ -485,17 +485,59 @@ export default function ReviewRequestScreen() {
               </TouchableOpacity>
             </Modal>
 
+            {/* Budget Breakdown */}
+            {requestData.budget && (
+              <View style={styles.breakdownContainer}>
+                <View style={[styles.detailsRow, { marginBottom: 8 }]}>
+                  <View style={styles.detailItem}>
+                    <Text style={styles.detailLabel}>Base Budget</Text>
+                  </View>
+                  <Text style={[styles.detailValue, { color: COLORS.textSub }]}>
+                    LKR {parseFloat(requestData.budget).toFixed(2)}
+                  </Text>
+                </View>
+                
+                <View style={[styles.detailsRow, { marginBottom: 8 }]}>
+                  <View style={styles.detailItem}>
+                    <Text style={styles.detailLabel}>Commission (10%)</Text>
+                  </View>
+                  <Text style={[styles.detailValue, { color: "#ef4444", fontSize: 14 }]}>
+                    - LKR {(parseFloat(requestData.budget) * 0.1).toFixed(2)}
+                  </Text>
+                </View>
+
+                <View style={[styles.detailsRow, { marginBottom: 8 }]}>
+                  <View style={styles.detailItem}>
+                    <Text style={styles.detailLabel}>Tax (5%)</Text>
+                  </View>
+                  <Text style={[styles.detailValue, { color: "#ef4444", fontSize: 14 }]}>
+                    - LKR {(parseFloat(requestData.budget) * 0.05).toFixed(2)}
+                  </Text>
+                </View>
+                
+                <View style={styles.miniDivider} />
+              </View>
+            )}
+
             {/* Total Estimation */}
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Estimated Budget</Text>
+              <Text style={styles.totalLabel}>
+                {requestData.budget ? "Net Service Amount" : "Estimated Budget"}
+              </Text>
               <Text style={styles.totalValue}>
                 {requestData.budget
-                  ? `LKR ${requestData.budget}`
+                  ? `LKR ${(parseFloat(requestData.budget) * 0.85).toFixed(2)}`
                   : "Pending Quote"}
               </Text>
             </View>
+            <View style={[styles.totalRow, { marginTop: 4, borderTopWidth: 1, borderTopColor: COLORS.border, paddingTop: 8 }]}>
+              <Text style={[styles.totalLabel, { fontSize: 14, color: COLORS.textMain }]}>Total to Pay</Text>
+              <Text style={[styles.totalValue, { fontSize: 18, color: COLORS.textMain }]}>
+                {requestData.budget ? `LKR ${parseFloat(requestData.budget).toFixed(2)}` : "TBD"}
+              </Text>
+            </View>
             <Text style={styles.disclaimerText}>
-              Final price will be determined after on-site inspection.
+              Final price will be determined after on-site inspection. Commissions and taxes are pre-calculated for transparency.
             </Text>
           </View>
 
@@ -787,12 +829,22 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.primary,
   },
+  breakdownContainer: {
+    paddingVertical: 4,
+  },
+  miniDivider: {
+    height: 1,
+    backgroundColor: COLORS.border,
+    marginVertical: 8,
+    opacity: 0.5,
+  },
   disclaimerText: {
     fontSize: 11,
     color: "#94a3b8",
     textAlign: "center",
     marginTop: -8,
     fontStyle: "italic",
+    paddingHorizontal: 10,
   },
   termsContainer: {
     flexDirection: "row",

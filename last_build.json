@@ -1,0 +1,53 @@
+﻿[
+  {
+    "id": "ec103a06-3b22-4df2-a6a3-a32596ae8a5a",
+    "status": "ERRORED",
+    "platform": "ANDROID",
+    "error": {
+      "errorCode": "EAS_BUILD_UNKNOWN_GRADLE_ERROR",
+      "message": "Gradle build failed with unknown error. See logs for the \"Run gradlew\" phase for more information."
+    },
+    "artifacts": {},
+    "fingerprint": {
+      "id": "019cf94e-1823-7023-a791-fbc2edce257d",
+      "hash": "55fbd15e15413c21f4110652e305832dd78ef0ed"
+    },
+    "initiatingActor": {
+      "id": "2c42186d-fde1-4e71-8510-9b1e53799a7b",
+      "displayName": "athvik"
+    },
+    "logFiles": [
+      "https://job-logs.eascdn.net/production/ec103a06-3b22-4df2-a6a3-a32596ae8a5a/1773710628575-f16d858f-4056-44c0-8cb9-7576d88b05e5.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260317%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260317T013633Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=362702e65908941d8fe3baf92ca66c4ef3b0cf15d030b86d353891ed245083def29e53c19bac3b4788e76ca3c594ac9e02683b6869c8ed62ea34cfe0611b288a03b22b98231c0090eab8dd6148a463df8de9084be4c4736ce0b3df5fff7d60bd9e8c951ddfaffdf63b00812bc15b9bb6adc5aa5ee059b62d1b6582d1e5f210bc67e4ad9a31c226acdfc125fe264120ef56c425bdba57019ed95173f91d8e0663ec4dbaa56aad5b64f1f0e8e39346631114254e276e4ce6ccf3a01197fe27bfa6d9f3056b739411fe3c3042cc56d0ee5f7133607dc2b5cee137cf8d869945814d2863959c5334d2792a1b3bf205bf5ac6e8911a0ecaf036a1be3b52e01be3fe60",
+      "https://job-logs.eascdn.net/production/ec103a06-3b22-4df2-a6a3-a32596ae8a5a/1773710630249-9ee04465-5a95-479a-8902-e6362c7f9ff5.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260317%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260317T013633Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=817c08709b7177f45ba378fdff3290893eb6bd3b2b6acbeeefb88ab04a0db973c86b0b2c522d5d985fdd4e09f3d97a5420b224aff7dbbcdaef196e61bc10725dbea3d78fa39e52d64e96d9dae370ce6f3ba8e0245d4506fa827e31ef09c7704b1cdcfd514b8633a96f063fedfd481fd21ff0b101f1fe072e1a1f41eedd20692461d8bd63179d3525c5b653929d619b15e8349275b6816b06c611d96e2ebb0ae79c19c9a738b451766868557cb45ccdb99e788923b34c3a876fe678529feded7d43dd902fa3decff0ccc42dc958f6f04a3d74e9a5729b5b39606ef1144fd6af59adb4ea5da1933754eb550115ffb72bc890f66b9c1197dad2f03de0fce301ba1c",
+      "https://job-logs.eascdn.net/production/ec103a06-3b22-4df2-a6a3-a32596ae8a5a/1773710630487-f4d5b4db-fd5a-4c94-8d30-0e6d26a5c80b.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260317%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260317T013633Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=352de13fcc6dbeefe1702b206871d68c8bedd78e476a7d4ee72ed9e9ac4cbff57877a39b3ced2039d83e4fa03d9887f6653fedb10c7e7a3f06c2222bcde8f5c2c747503871f813c2f7d8c35c3a47088d170038e602188ed81421b9b4758d8fd3d640fff2283e68594a5c68c9e197dacceffb4045767407d0b1fc52b58341bdc9b557b1e48afadf6963144abc30a4bcc8f101dd172022412987865c62ca56e7db9c85c443a2eb0249f60589b25650f3746cb5d8e49c8b8b654245fcb621fb096353bc688f4c08a2f4276bcaca03e95a303468fefcfe2666304f9334a8283c6a26e57c412153d39a317ea9d6146c7eaec57f383380ec3f9640afbf09760e9e5462",
+      "https://job-logs.eascdn.net/production/ec103a06-3b22-4df2-a6a3-a32596ae8a5a/1773710630662-c5537430-a79f-4759-a253-3723b2947842.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260317%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260317T013633Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=c8790997296465be300dcc936faa64e0dda2df3398813c4b1b15f4e02b84cb7c485633a94b05a69b07393933ef780ecaa7ac55e1ba12f2ec60b186c82f3462a08833e54ce3f0966f84e4c12da84e3240b93f6136853a3e514e138b6ff460d72fb94baea85c9e0ed1c35745ffc97afcf8f1021264807e88221fb8cc523c0b8d5dad50a591e652472935cf55813d7823dd6456c3538d50af90289cd9ffb1c1009b7abffb986964036f00a46bc4af923d3da5c4fb10975bab5188c963f42aaebfcb085479e5adf66b5fbecca727399c352457974ec37f63bd140797b992178b01e3b1c341fb3462444a682965ebeea572d4029a4243e8ba71fa549536e9bd63c79a"
+    ],
+    "project": {
+      "id": "e31594d9-ee29-43cd-9d86-b65412b9359c",
+      "name": "fixmate",
+      "slug": "fixmate",
+      "ownerAccount": {
+        "id": "a960c49d-4bcf-42d9-8392-9a7e87c89678",
+        "name": "athvik"
+      }
+    },
+    "distribution": "INTERNAL",
+    "buildProfile": "preview",
+    "sdkVersion": "54.0.0",
+    "appVersion": "1.0.0",
+    "appBuildVersion": "1",
+    "gitCommitHash": "a96102d0f0ba41f9f89b5e6c67b0eeb51a962a60",
+    "gitCommitMessage": "new changes by paveshan",
+    "priority": "NORMAL_PLUS",
+    "createdAt": "2026-03-17T01:23:48.365Z",
+    "updatedAt": "2026-03-17T01:26:55.768Z",
+    "completedAt": "2026-03-17T01:26:51.463Z",
+    "expirationDate": "2026-03-31T01:23:48.399Z",
+    "isForIosSimulator": false,
+    "metrics": {
+      "buildWaitTime": 110,
+      "buildQueueTime": 39045,
+      "buildDuration": 143600
+    }
+  }
+]
